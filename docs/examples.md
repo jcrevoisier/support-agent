@@ -46,9 +46,9 @@ Fields to collect:
 > **Customer:** My order hasn't arrived and it's been three weeks. It's a gift for a birthday on Saturday.
 > **Bot:** I'm sorry for the wait. What's your order number?
 > **Customer:** 1003
-> **Bot:** Thanks. I've logged a late-delivery report for order 1003. A colleague will contact you soon.
-> **Customer:** Wait, sorry, it's 1004.
-> **Bot:** No problem, I've updated the report to order 1004.
+> **Bot:** Order 1003 is for a coffee mug and shows as delivered. Could you confirm the order number?
+> **Customer:** Sorry, it's 1004.
+> **Bot:** Thanks. I've logged a late-delivery report for your wireless headphones. A colleague will contact you soon.
 
 ```json
 {

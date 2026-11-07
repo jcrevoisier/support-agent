@@ -1,6 +1,9 @@
+import json
+
 from langchain_core.language_models.fake_chat_models import GenericFakeChatModel
 from langchain_core.messages import AIMessage
 
+from support_agent import storage
 from support_agent.agent import build_agent
 from support_agent.conversation import GIVE_UP_REPLY, GREETING, RETRY_REPLY, Conversation
 from support_agent.models import Message, Ticket
@@ -55,11 +58,40 @@ def test_failure_count_resets_after_a_reply():
     assert chat.send('1001') == RETRY_REPLY
 
 
-def test_ticket():
+def test_ticket_update_saves_the_conversation(monkeypatch):
+    saves = []
+
+    def summarize(transcript):
+        saves.append(len(transcript))
+        return storage.Summary(summary='Lamp arrived broken.', key_points=[])
+
+    monkeypatch.setattr(storage, 'summarize', summarize)
     ticket = {'order_number': '1001', 'category': 'damaged_item', 'description': 'Lamp is broken.', 'urgency': 'low'}
     save = AIMessage('', tool_calls=[{'name': 'save_ticket', 'args': ticket, 'id': 'call-1'}])
-    chat = conversation(save, 'I logged that your desk lamp arrived broken.')
+    chat = conversation("What's your order number?", save, 'I logged that your desk lamp arrived broken.')
 
-    assert chat.ticket is None
-    assert chat.send('Order 1001, my lamp is broken') == 'I logged that your desk lamp arrived broken.'
+    chat.send('My lamp is broken')
+    assert chat.send('1001') == 'I logged that your desk lamp arrived broken.'
     assert chat.ticket == Ticket(**ticket)
+
+    record = json.loads(chat.close().read_text())
+    assert saves == [5, 5], 'one save for the ticket, one when the chat closes'
+    assert record['ticket'] == ticket
+    assert record['summary'] == 'Lamp arrived broken.'
+
+
+def test_close_saves_with_summary():
+    chat = conversation()
+    record = json.loads(chat.close().read_text())
+    assert record['summary'] == 'Summary.'
+    assert record['transcript'] == [Message(role='bot', content=GREETING).model_dump()]
+
+
+def test_close_saves_when_summary_fails(monkeypatch):
+    def broken_summarize(transcript):
+        raise RuntimeError('AI is down')
+
+    monkeypatch.setattr(storage, 'summarize', broken_summarize)
+    record = json.loads(conversation().close().read_text())
+    assert record['summary'] is None
+    assert len(record['transcript']) == 1
