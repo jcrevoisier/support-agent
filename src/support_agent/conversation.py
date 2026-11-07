@@ -65,16 +65,13 @@ class Conversation:
     def transcript(self) -> list[Message]:
         return [
             Message(role='customer' if isinstance(message, HumanMessage) else 'bot', content=message.text)
-            for message in self._state().get('messages', [])
+            for message in self.agent.get_state(self.config).values.get('messages', [])
             if isinstance(message, HumanMessage | AIMessage) and message.text
         ]
 
     @property
     def ticket(self) -> Ticket | None:
         return storage.load_ticket(self.id)
-
-    def _state(self) -> dict:
-        return self.agent.get_state(self.config).values
 
     def _add_bot_message(self, text: str) -> None:
         self.agent.update_state(self.config, {'messages': [AIMessage(text)]})
