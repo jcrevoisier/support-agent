@@ -4,24 +4,25 @@ from collections.abc import Iterator
 from pathlib import Path
 
 from langchain_core.messages import AIMessage, HumanMessage
+from langgraph.graph.state import CompiledStateGraph
 
 from support_agent import storage
-from support_agent.agent import build_agent
+from support_agent.agent import SUPPORT_EMAIL, build_agent
 from support_agent.models import Message, Ticket
 from support_agent.summary import summarize
 
 GREETING = 'Hi! How can I help you today?'
 RETRY_REPLY = 'Sorry, something went wrong. Could you send that again?'
-GIVE_UP_REPLY = "Sorry, I'm having trouble right now. Please email us at support@example-shop.com and we'll help you."
+GIVE_UP_REPLY = f"Sorry, I'm having trouble right now. Please email us at {SUPPORT_EMAIL} and we'll help you."
 
 logger = logging.getLogger(__name__)
 
 
 class Conversation:
-    def __init__(self, agent=None):
+    def __init__(self, agent: CompiledStateGraph | None = None):
         self.agent = agent or build_agent()
         self.id = str(uuid.uuid4())
-        self.config = {'configurable': {'thread_id': self.id}, 'recursion_limit': 10}
+        self.config = {'configurable': {'thread_id': self.id}, 'recursion_limit': 25}
         self.failures = 0
 
     def start(self) -> str:

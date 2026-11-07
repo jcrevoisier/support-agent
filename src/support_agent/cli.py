@@ -1,5 +1,7 @@
 import logging
 
+from dotenv import load_dotenv
+
 from support_agent.conversation import Conversation
 
 LOG_FILE = 'support-agent.log'
@@ -8,8 +10,15 @@ logger = logging.getLogger(__name__)
 
 
 def main() -> None:
+    load_dotenv()
     logging.basicConfig(filename=LOG_FILE, level=logging.INFO, format='%(asctime)s %(levelname)s %(name)s %(message)s')
-    chat = Conversation()
+    try:
+        chat = Conversation()
+    except Exception:
+        logger.exception('Could not start the agent')
+        raise SystemExit(
+            f'Could not start the agent. Check OPENAI_API_KEY and LLM_MODEL_OPTIONS in .env. See {LOG_FILE}.'
+        )
     print(f'Bot: {chat.start()}')
     try:
         while True:

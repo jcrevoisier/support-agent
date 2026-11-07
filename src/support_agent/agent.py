@@ -3,6 +3,7 @@ from langchain.tools import tool
 from langchain_core.language_models import BaseChatModel
 from langchain_core.runnables import RunnableConfig
 from langgraph.checkpoint.memory import InMemorySaver
+from langgraph.graph.state import CompiledStateGraph
 from pydantic import ValidationError
 
 from support_agent import storage
@@ -10,7 +11,9 @@ from support_agent.llm import chat_model
 from support_agent.models import Category, Ticket, Urgency
 from support_agent.orders import find_order
 
-PROMPT = """You are the support assistant of an online shop. You chat with a customer to open a support ticket.
+SUPPORT_EMAIL = 'support@example-shop.com'
+
+PROMPT = f"""You are the support assistant of an online shop. You chat with a customer to open a support ticket.
 
 To open the ticket you need:
 - the order number. Once the customer gives one, check it with lookup_order. If the order does not match what the \
@@ -27,7 +30,7 @@ Rules:
 - If the customer asks a question, answer it in one sentence, then go back to what you need for the ticket. If you \
 do not know the answer (for example shop policies, refunds or delivery times), say a colleague will help with it.
 - Do not promise refunds, replacements or delivery dates.
-- If the customer wants to talk to a person, give them support@example-shop.com. If you already have the order \
+- If the customer wants to talk to a person, give them {SUPPORT_EMAIL}. If you already have the order \
 number, still open or update the ticket with what they told you.
 - Reply in the customer's language.
 - Call save_ticket as soon as you have everything. Only after save_ticket succeeds, tell the customer what you \
@@ -61,7 +64,7 @@ def save_ticket(
     return f'Ticket saved for order {order.number} ({order.product}, {order.status}).'
 
 
-def build_agent(model: BaseChatModel | None = None):
+def build_agent(model: BaseChatModel | None = None) -> CompiledStateGraph:
     return create_agent(
         model or chat_model(),
         tools=[lookup_order, save_ticket],
