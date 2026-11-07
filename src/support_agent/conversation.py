@@ -1,5 +1,6 @@
 import logging
 import uuid
+from collections.abc import Iterator
 from pathlib import Path
 
 from langchain_core.messages import AIMessage, HumanMessage
@@ -28,18 +29,22 @@ class Conversation:
         self._add_bot_message(GREETING)
         return GREETING
 
-    def send(self, text: str) -> str:
-        """Send the customer's message to the agent and return the bot's reply."""
+    def send(self, text: str) -> Iterator[str]:
+        """Send the customer's message to the agent and yield each bot message as soon as the agent writes it."""
         try:
-            state = self.agent.invoke({'messages': [HumanMessage(text)]}, self.config)
+            for step in self.agent.stream({'messages': [HumanMessage(text)]}, self.config, stream_mode='updates'):
+                for update in step.values():
+                    for message in (update or {}).get('messages', []):
+                        if isinstance(message, AIMessage) and message.text:
+                            yield message.text
         except Exception:
             logger.exception('Agent failed in conversation %s', self.id)
             self.failures += 1
             reply = RETRY_REPLY if self.failures == 1 else GIVE_UP_REPLY
             self._add_bot_message(reply)
-            return reply
+            yield reply
+            return
         self.failures = 0
-        return state['messages'][-1].text
 
     def close(self) -> Path | None:
         """Summarize and save the conversation. Call it when the customer leaves.

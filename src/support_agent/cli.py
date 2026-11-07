@@ -14,7 +14,8 @@ def main() -> None:
     try:
         while True:
             if text := input('You: ').strip():
-                print(f'Bot: {chat.send(text)}')
+                for reply in chat.send(text):
+                    print(f'Bot: {reply}')
     except (EOFError, KeyboardInterrupt):
         print()
     finally:
