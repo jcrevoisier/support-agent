@@ -1,0 +1,8 @@
+[
+  {"number": "1001", "product": "Desk lamp", "status": "delivered", "ordered_on": "2026-10-20"},
+  {"number": "1002", "product": "Blue sweater", "status": "delivered", "ordered_on": "2026-10-22"},
+  {"number": "1003", "product": "Coffee mug", "status": "delivered", "ordered_on": "2026-10-10"},
+  {"number": "1004", "product": "Wireless headphones", "status": "shipped", "ordered_on": "2026-10-15"},
+  {"number": "1005", "product": "Running shoes", "status": "delivered", "ordered_on": "2026-10-25"},
+  {"number": "1006", "product": "Backpack", "status": "processing", "ordered_on": "2026-11-05"}
+]
