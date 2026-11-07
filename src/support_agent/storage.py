@@ -3,19 +3,10 @@ from pathlib import Path
 
 from pydantic import BaseModel
 
-from support_agent.llm import chat_model
 from support_agent.models import Message, Ticket
+from support_agent.summary import Summary
 
 CONVERSATIONS_DIR = Path('conversations')
-
-SUMMARY_PROMPT = """Summarize this chat between an online shop's support bot and a customer, in English.
-Write a summary of one or two sentences, and a few short key points: the order, the problem, the urgency and the \
-outcome."""
-
-
-class Summary(BaseModel):
-    text: str
-    key_points: list[str]
 
 
 class ConversationRecord(BaseModel):
@@ -46,8 +37,3 @@ def save(
     temporary.write_text(record.model_dump_json(indent=2))
     temporary.replace(path)
     return path
-
-
-def summarize(transcript: list[Message]) -> Summary:
-    chat = '\n'.join(f'{message.role}: {message.content}' for message in transcript)
-    return chat_model().with_structured_output(Summary).invoke([('system', SUMMARY_PROMPT), ('user', chat)])

@@ -1,22 +1,7 @@
-import json
-import re
 from enum import StrEnum
-from pathlib import Path
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
-
-ORDERS_FILE = Path(__file__).parent / 'orders.json'
-ORDERS = {order['number']: order for order in json.loads(ORDERS_FILE.read_text())}
-
-
-def find_order(order_number: str) -> dict:
-    number = re.sub(r'[^0-9]', '', order_number)
-    if not number:
-        raise ValueError("That doesn't look like an order number")
-    if number not in ORDERS:
-        raise ValueError(f"I can't find order {number}")
-    return ORDERS[number]
 
 
 class Category(StrEnum):

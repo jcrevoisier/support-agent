@@ -83,10 +83,10 @@ def test_close_saves_with_summary():
 
 
 def test_close_saves_when_summary_fails(monkeypatch):
-    def broken_summarize(transcript):
+    def broken_summarize(transcript, ticket):
         raise RuntimeError('AI is down')
 
-    monkeypatch.setattr(storage, 'summarize', broken_summarize)
+    monkeypatch.setattr('support_agent.conversation.summarize', broken_summarize)
     chat = conversation('Hello! How can I help?')
     chat.send('Hi')
     record = json.loads(chat.close().read_text())

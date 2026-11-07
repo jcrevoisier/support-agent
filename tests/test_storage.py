@@ -2,6 +2,7 @@ import json
 
 from support_agent import storage
 from support_agent.models import Message, Ticket
+from support_agent.summary import Summary
 
 TRANSCRIPT = [Message(role='bot', content='Hi!'), Message(role='customer', content='Order 1001, my lamp is broken')]
 TICKET = Ticket(order_number='1001', category='damaged_item', description='Lamp is broken.', urgency='medium')
@@ -19,7 +20,7 @@ def test_save(fake_storage):
 
 
 def test_save_with_summary():
-    summary = storage.Summary(text='Lamp arrived broken.', key_points=['Order 1001'])
+    summary = Summary(text='Lamp arrived broken.', key_points=['Order 1001'])
     record = json.loads(storage.save('chat-1', TRANSCRIPT, TICKET, summary).read_text())
     assert record['summary'] == summary.model_dump()
 

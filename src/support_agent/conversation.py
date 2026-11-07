@@ -7,6 +7,7 @@ from langchain_core.messages import AIMessage, HumanMessage
 from support_agent import storage
 from support_agent.agent import build_agent
 from support_agent.models import Message, Ticket
+from support_agent.summary import summarize
 
 GREETING = 'Hi! How can I help you today?'
 RETRY_REPLY = 'Sorry, something went wrong. Could you send that again?'
@@ -53,12 +54,13 @@ class Conversation:
         transcript = self.transcript
         if not any(message.role == 'customer' for message in transcript):
             return None
+        ticket = self.ticket
         try:
-            summary = storage.summarize(transcript)
+            summary = summarize(transcript, ticket)
         except Exception:
             logger.exception('Could not summarize conversation %s', self.id)
             summary = None
-        return storage.save(self.id, transcript, self.ticket, summary)
+        return storage.save(self.id, transcript, ticket, summary)
 
     @property
     def transcript(self) -> list[Message]:

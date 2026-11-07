@@ -1,4 +1,3 @@
-import json
 from typing import Annotated, NotRequired
 
 from langchain.agents import AgentState, create_agent
@@ -10,7 +9,8 @@ from langgraph.types import Command
 from pydantic import ValidationError
 
 from support_agent.llm import chat_model
-from support_agent.models import Category, Ticket, Urgency, find_order
+from support_agent.models import Category, Ticket, Urgency
+from support_agent.orders import find_order
 
 PROMPT = """You are the support assistant of an online shop. You chat with a customer to open a support ticket.
 
@@ -45,7 +45,7 @@ class SupportState(AgentState):
 def lookup_order(order_number: str) -> str:
     """Find an order by its number."""
     try:
-        return json.dumps(find_order(order_number))
+        return find_order(order_number).model_dump_json()
     except ValueError as error:
         return f'Error: {error}'
 
@@ -61,7 +61,7 @@ def save_ticket(
     """Save the support ticket, or update it."""
     try:
         order = find_order(order_number)
-        ticket = Ticket(order_number=order['number'], category=category, description=description, urgency=urgency)
+        ticket = Ticket(order_number=order.number, category=category, description=description, urgency=urgency)
     except ValidationError as error:
         return 'Error: ' + '; '.join(detail['msg'] for detail in error.errors())
     except ValueError as error:
