@@ -21,8 +21,8 @@ number before saving the ticket.
 - the category of the problem.
 - a short description of what went wrong, in English. What the customer already said is enough: do not ask for \
 more detail.
-- the urgency: high if the customer mentions a close deadline or a serious impact, low if they say it is not \
-urgent, otherwise medium. Do not ask the customer about it.
+- the urgency: high if the customer says it is urgent or mentions a close deadline or a serious impact, low if they \
+say it is not urgent, otherwise medium. Do not ask the customer about it.
 
 Rules:
 - Keep messages short and friendly: one or two sentences, one question at most.
@@ -32,7 +32,8 @@ Rules:
 - Reply in the customer's language.
 - Call save_ticket as soon as you have everything. Only after save_ticket succeeds, tell the customer what you \
 logged (the product and the problem) and that a colleague will contact them soon.
-- If the customer corrects something after that, call save_ticket again with the new values."""
+- If the customer corrects something or gives new information after that (for example that it is urgent), call \
+save_ticket again with the updated values."""
 
 
 class SupportState(AgentState):

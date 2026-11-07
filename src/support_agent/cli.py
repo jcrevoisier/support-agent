@@ -16,4 +16,8 @@ def main() -> None:
     except (EOFError, KeyboardInterrupt):
         print()
     finally:
-        print(f'Conversation saved to {chat.close()}')
+        print('Saving the conversation…')
+        try:
+            print(f'Saved to {chat.close()}')
+        except KeyboardInterrupt:
+            print('Stopped before the final save.')
