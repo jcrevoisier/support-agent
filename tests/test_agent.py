@@ -28,4 +28,9 @@ def test_save_ticket():
 
 def test_save_ticket_with_unknown_order():
     result = call_save_ticket(TICKET | {'order_number': '9999'})
-    assert result.content == "Error: Value error, I can't find order 9999"
+    assert result.content == "Error: I can't find order 9999"
+
+
+def test_save_ticket_without_description():
+    result = call_save_ticket(TICKET | {'description': ''})
+    assert result.content == 'Error: String should have at least 1 character'

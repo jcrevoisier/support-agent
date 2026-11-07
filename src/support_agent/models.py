@@ -4,7 +4,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Literal
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, Field
 
 ORDERS_FILE = Path(__file__).parent / 'orders.json'
 ORDERS = {order['number']: order for order in json.loads(ORDERS_FILE.read_text())}
@@ -41,10 +41,5 @@ class Message(BaseModel):
 class Ticket(BaseModel):
     order_number: str
     category: Category
-    description: str
+    description: str = Field(min_length=1)
     urgency: Urgency
-
-    @field_validator('order_number')
-    @classmethod
-    def check_order_number(cls, value: str) -> str:
-        return find_order(value)['number']

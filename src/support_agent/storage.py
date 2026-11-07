@@ -30,7 +30,10 @@ class ConversationRecord(BaseModel):
 def save(
     conversation_id: str, transcript: list[Message], ticket: Ticket | None, summary: Summary | None = None
 ) -> Path:
-    """Write the conversation to ``conversations/<id>.json``, replacing the previous version."""
+    """Write the conversation to ``conversations/<id>.json``, replacing the previous version.
+
+    Writes to a temporary file first, so an interrupted write never leaves a broken file.
+    """
     record = ConversationRecord(
         id=conversation_id,
         saved_at=datetime.now(UTC),
@@ -41,7 +44,9 @@ def save(
     )
     CONVERSATIONS_DIR.mkdir(exist_ok=True)
     path = path_for(conversation_id)
-    path.write_text(record.model_dump_json(indent=2))
+    temporary = path.with_suffix('.tmp')
+    temporary.write_text(record.model_dump_json(indent=2))
+    temporary.replace(path)
     return path
 
 

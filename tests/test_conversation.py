@@ -81,10 +81,11 @@ def test_ticket_update_saves_the_conversation(monkeypatch):
 
 
 def test_close_saves_with_summary():
-    chat = conversation()
+    chat = conversation('Hello! How can I help?')
+    chat.send('Hi')
     record = json.loads(chat.close().read_text())
     assert record['summary'] == 'Summary.'
-    assert record['transcript'] == [Message(role='bot', content=GREETING).model_dump()]
+    assert len(record['transcript']) == 3
 
 
 def test_close_saves_when_summary_fails(monkeypatch):
@@ -92,6 +93,13 @@ def test_close_saves_when_summary_fails(monkeypatch):
         raise RuntimeError('AI is down')
 
     monkeypatch.setattr(storage, 'summarize', broken_summarize)
-    record = json.loads(conversation().close().read_text())
+    chat = conversation('Hello! How can I help?')
+    chat.send('Hi')
+    record = json.loads(chat.close().read_text())
     assert record['summary'] is None
-    assert len(record['transcript']) == 1
+    assert len(record['transcript']) == 3
+
+
+def test_close_without_customer_message_saves_nothing(fake_storage):
+    assert conversation().close() is None
+    assert list(fake_storage.iterdir()) == []

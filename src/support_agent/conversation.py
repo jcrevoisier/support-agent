@@ -42,14 +42,20 @@ class Conversation:
             return reply
         self.failures = 0
         if state.get('ticket') != ticket_before:
-            self._saver.submit(self._save)
+            self._saver.submit(self._save, self.transcript, self.ticket)
         return state['messages'][-1].text
 
-    def close(self) -> Path:
-        """Save the conversation one last time and wait for every save to finish. Call it when the customer leaves."""
-        self._saver.submit(self._save)
+    def close(self) -> Path | None:
+        """Save the conversation one last time and wait for every save to finish. Call it when the customer leaves.
+
+        Returns the saved file, or ``None`` if the customer never wrote anything.
+        """
+        transcript = self.transcript
+        if any(message.role == 'customer' for message in transcript):
+            self._saver.submit(self._save, transcript, self.ticket)
         self._saver.shutdown(wait=True)
-        return storage.path_for(self.id)
+        path = storage.path_for(self.id)
+        return path if path.exists() else None
 
     @property
     def transcript(self) -> list[Message]:
@@ -64,10 +70,9 @@ class Conversation:
         ticket = self._state().get('ticket')
         return Ticket.model_validate(ticket) if ticket else None
 
-    def _save(self) -> None:
-        """Summarize and save the latest state. Runs on ``_saver``, one save at a time."""
+    def _save(self, transcript: list[Message], ticket: Ticket | None) -> None:
+        """Summarize and save the conversation. Runs on ``_saver``, one save at a time."""
         try:
-            transcript, ticket = self.transcript, self.ticket
             try:
                 summary = storage.summarize(transcript)
             except Exception:

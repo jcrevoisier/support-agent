@@ -18,6 +18,8 @@ def main() -> None:
     finally:
         print('Saving the conversation…')
         try:
-            print(f'Saved to {chat.close()}')
+            path = chat.close()
         except KeyboardInterrupt:
-            print('Stopped before the final save.')
+            print('Finishing the save before exiting…')
+        else:
+            print(f'Saved to {path}' if path else 'Nothing to save.')

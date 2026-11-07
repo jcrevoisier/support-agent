@@ -16,6 +16,7 @@ def test_save(fake_storage):
     assert record['summary'] is None
     assert record['key_points'] == []
     assert record['transcript'] == [message.model_dump() for message in TRANSCRIPT]
+    assert list(fake_storage.iterdir()) == [path], 'no temporary file left behind'
 
 
 def test_save_with_summary():
