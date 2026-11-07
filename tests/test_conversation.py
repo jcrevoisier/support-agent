@@ -59,19 +59,19 @@ def test_failure_count_resets_after_a_reply():
     assert chat.send('1001') == RETRY_REPLY
 
 
-def test_ticket_update_saves_the_conversation(fake_storage):
+def test_ticket_is_saved_and_kept_at_close():
     ticket = {'order_number': '1001', 'category': 'damaged_item', 'description': 'Lamp is broken.', 'urgency': 'low'}
     save = AIMessage('', tool_calls=[{'name': 'save_ticket', 'args': ticket, 'id': 'call-1'}])
     chat = conversation("What's your order number?", save, 'I logged that your desk lamp arrived broken.')
 
     chat.send('My lamp is broken')
-    assert list(fake_storage.iterdir()) == [], 'no save while the ticket is unchanged'
-
+    assert chat.ticket is None
     assert chat.send('1001') == 'I logged that your desk lamp arrived broken.'
     assert chat.ticket == Ticket(**ticket)
-    record = json.loads((fake_storage / f'{chat.id}.json').read_text())
+
+    record = json.loads(chat.close().read_text())
     assert record['ticket'] == ticket
-    assert record['summary'] is None, 'the summary is added when the chat closes'
+    assert record['summary'] == {'text': 'Summary.', 'key_points': ['Point']}
 
 
 def test_close_saves_with_summary():
@@ -103,7 +103,7 @@ def test_close_reports_a_failed_save(monkeypatch):
     def broken_save(*args):
         raise OSError('Disk full')
 
-    monkeypatch.setattr(storage, 'save', broken_save)
+    monkeypatch.setattr(storage, 'save_conversation', broken_save)
     chat = conversation('Hello! How can I help?')
     chat.send('Hi')
     with pytest.raises(OSError):

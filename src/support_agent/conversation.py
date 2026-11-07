@@ -25,11 +25,7 @@ class Conversation:
         self._add_bot_message(GREETING)
 
     def send(self, text: str) -> str:
-        """Send the customer's message to the agent and return the bot's reply.
-
-        Saves the conversation when the ticket changes, without a summary: ``close`` adds it.
-        """
-        ticket_before = self._state().get('ticket')
+        """Send the customer's message to the agent and return the bot's reply."""
         try:
             state = self.agent.invoke({'messages': [HumanMessage(text)]}, self.config)
         except Exception:
@@ -39,11 +35,6 @@ class Conversation:
             self._add_bot_message(reply)
             return reply
         self.failures = 0
-        if state.get('ticket') != ticket_before:
-            try:
-                storage.save(self.id, self.transcript, self.ticket)
-            except OSError:
-                logger.exception('Could not save conversation %s', self.id)
         return state['messages'][-1].text
 
     def close(self) -> Path | None:
@@ -54,13 +45,12 @@ class Conversation:
         transcript = self.transcript
         if not any(message.role == 'customer' for message in transcript):
             return None
-        ticket = self.ticket
         try:
-            summary = summarize(transcript, ticket)
+            summary = summarize(transcript, self.ticket)
         except Exception:
             logger.exception('Could not summarize conversation %s', self.id)
             summary = None
-        return storage.save(self.id, transcript, ticket, summary)
+        return storage.save_conversation(self.id, transcript, summary)
 
     @property
     def transcript(self) -> list[Message]:
@@ -72,8 +62,7 @@ class Conversation:
 
     @property
     def ticket(self) -> Ticket | None:
-        ticket = self._state().get('ticket')
-        return Ticket.model_validate(ticket) if ticket else None
+        return storage.load_ticket(self.id)
 
     def _state(self) -> dict:
         return self.agent.get_state(self.config).values

@@ -1,13 +1,11 @@
-from typing import Annotated, NotRequired
-
-from langchain.agents import AgentState, create_agent
-from langchain.tools import InjectedToolCallId, tool
+from langchain.agents import create_agent
+from langchain.tools import tool
 from langchain_core.language_models import BaseChatModel
-from langchain_core.messages import ToolMessage
+from langchain_core.runnables import RunnableConfig
 from langgraph.checkpoint.memory import InMemorySaver
-from langgraph.types import Command
 from pydantic import ValidationError
 
+from support_agent import storage
 from support_agent.llm import chat_model
 from support_agent.models import Category, Ticket, Urgency
 from support_agent.orders import find_order
@@ -26,7 +24,8 @@ serious impact. Low if they say it is not urgent, otherwise medium. Do not ask t
 
 Rules:
 - Keep messages short and friendly: one or two sentences, one question at most.
-- If the customer asks something, answer briefly first, then continue.
+- If the customer asks a question, answer it in one sentence, then go back to what you need for the ticket. If you \
+do not know the answer (for example shop policies, refunds or delivery times), say a colleague will help with it.
 - Do not promise refunds, replacements or delivery dates.
 - If the customer wants to talk to a person, give them support@example-shop.com. If you already have the order \
 number, still open or update the ticket with what they told you.
@@ -35,10 +34,6 @@ number, still open or update the ticket with what they told you.
 logged (the product and the problem) and that a colleague will contact them soon.
 - If the customer corrects something or gives new information after that (for example that it is urgent), call \
 save_ticket again with the updated values."""
-
-
-class SupportState(AgentState):
-    ticket: NotRequired[dict]
 
 
 @tool
@@ -52,12 +47,8 @@ def lookup_order(order_number: str) -> str:
 
 @tool
 def save_ticket(
-    order_number: str,
-    category: Category,
-    description: str,
-    urgency: Urgency,
-    tool_call_id: Annotated[str, InjectedToolCallId],
-) -> Command | str:
+    order_number: str, category: Category, description: str, urgency: Urgency, config: RunnableConfig
+) -> str:
     """Save the support ticket, or update it."""
     try:
         order = find_order(order_number)
@@ -66,12 +57,8 @@ def save_ticket(
         return 'Error: ' + '; '.join(detail['msg'] for detail in error.errors())
     except ValueError as error:
         return f'Error: {error}'
-    return Command(
-        update={
-            'ticket': ticket.model_dump(mode='json'),
-            'messages': [ToolMessage('Ticket saved.', tool_call_id=tool_call_id)],
-        }
-    )
+    storage.save_ticket(config['configurable']['thread_id'], ticket)
+    return f'Ticket saved for order {order.number} ({order.product}, {order.status}).'
 
 
 def build_agent(model: BaseChatModel | None = None):
@@ -79,6 +66,5 @@ def build_agent(model: BaseChatModel | None = None):
         model or chat_model(),
         tools=[lookup_order, save_ticket],
         system_prompt=PROMPT,
-        state_schema=SupportState,
         checkpointer=InMemorySaver(),
     )
