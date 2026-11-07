@@ -32,7 +32,9 @@ class Replies:
 
 
 def conversation(*replies) -> Conversation:
-    return Conversation(build_agent(FakeModel(messages=Replies(*replies))))
+    chat = Conversation(build_agent(FakeModel(messages=Replies(*replies))))
+    assert chat.start() == GREETING
+    return chat
 
 
 def test_reply():

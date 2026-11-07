@@ -54,7 +54,7 @@ def save_ticket(
         order = find_order(order_number)
         ticket = Ticket(order_number=order.number, category=category, description=description, urgency=urgency)
     except ValidationError as error:
-        return 'Error: ' + '; '.join(detail['msg'] for detail in error.errors())
+        return 'Error: ' + '; '.join(f'{detail["loc"][0]}: {detail["msg"]}' for detail in error.errors())
     except ValueError as error:
         return f'Error: {error}'
     storage.save_ticket(config['configurable']['thread_id'], ticket)

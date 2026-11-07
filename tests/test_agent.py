@@ -30,5 +30,5 @@ def test_save_ticket_with_unknown_order():
 
 
 def test_save_ticket_without_description():
-    assert call_save_ticket(TICKET | {'description': ''}).startswith('Error:')
+    assert call_save_ticket(TICKET | {'description': ''}).startswith('Error: description:')
     assert storage.load_ticket('chat-1') is None

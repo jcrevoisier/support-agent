@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 def main() -> None:
     logging.basicConfig(filename=LOG_FILE, level=logging.INFO, format='%(asctime)s %(levelname)s %(name)s %(message)s')
     chat = Conversation()
-    print(f'Bot: {chat.transcript[-1].content}')
+    print(f'Bot: {chat.start()}')
     try:
         while True:
             if text := input('You: ').strip():

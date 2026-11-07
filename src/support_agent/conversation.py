@@ -22,7 +22,11 @@ class Conversation:
         self.id = str(uuid.uuid4())
         self.config = {'configurable': {'thread_id': self.id}, 'recursion_limit': 10}
         self.failures = 0
+
+    def start(self) -> str:
+        """Add the greeting to the conversation and return it."""
         self._add_bot_message(GREETING)
+        return GREETING
 
     def send(self, text: str) -> str:
         """Send the customer's message to the agent and return the bot's reply."""
