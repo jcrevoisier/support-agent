@@ -1,38 +1,16 @@
 import json
 
 import pytest
-from langchain_core.language_models.fake_chat_models import GenericFakeChatModel
 from langchain_core.messages import AIMessage
 
 from support_agent import storage
-from support_agent.agent import build_agent
 from support_agent.conversation import GIVE_UP_REPLY, GREETING, RETRY_REPLY, Conversation
 from support_agent.models import Message, Ticket
-
-
-class FakeModel(GenericFakeChatModel):
-    def bind_tools(self, tools, **kwargs):
-        return self
-
-
-class Replies:
-    """Returns the given replies in order, and raises the ones that are exceptions."""
-
-    def __init__(self, *items):
-        self.items = list(items)
-
-    def __iter__(self):
-        return self
-
-    def __next__(self):
-        item = self.items.pop(0)
-        if isinstance(item, Exception):
-            raise item
-        return item
+from tests.fakes import fake_agent
 
 
 def conversation(*replies) -> Conversation:
-    chat = Conversation(build_agent(FakeModel(messages=Replies(*replies))))
+    chat = Conversation(fake_agent(*replies))
     assert chat.start() == GREETING
     return chat
 
