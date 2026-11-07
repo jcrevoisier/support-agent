@@ -3,6 +3,7 @@ from typing import Annotated, NotRequired
 
 from langchain.agents import AgentState, create_agent
 from langchain.tools import InjectedToolCallId, tool
+from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import ToolMessage
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.types import Command
@@ -66,9 +67,9 @@ def save_ticket(
     )
 
 
-def build_agent():
+def build_agent(model: BaseChatModel | None = None):
     return create_agent(
-        chat_model(),
+        model or chat_model(),
         tools=[lookup_order, save_ticket],
         system_prompt=PROMPT,
         state_schema=SupportState,
