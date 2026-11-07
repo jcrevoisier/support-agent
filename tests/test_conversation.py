@@ -1,5 +1,6 @@
 import json
 
+import pytest
 from langchain_core.language_models.fake_chat_models import GenericFakeChatModel
 from langchain_core.messages import AIMessage
 
@@ -103,3 +104,14 @@ def test_close_saves_when_summary_fails(monkeypatch):
 def test_close_without_customer_message_saves_nothing(fake_storage):
     assert conversation().close() is None
     assert list(fake_storage.iterdir()) == []
+
+
+def test_close_reports_a_failed_save(monkeypatch):
+    def broken_save(*args):
+        raise OSError('Disk full')
+
+    monkeypatch.setattr(storage, 'save', broken_save)
+    chat = conversation('Hello! How can I help?')
+    chat.send('Hi')
+    with pytest.raises(RuntimeError, match='Could not save conversation'):
+        chat.close()

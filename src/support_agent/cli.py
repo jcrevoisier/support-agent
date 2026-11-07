@@ -21,5 +21,7 @@ def main() -> None:
             path = chat.close()
         except KeyboardInterrupt:
             print('Finishing the save before exiting…')
+        except RuntimeError:
+            print(f'Could not save the conversation. See {LOG_FILE}.')
         else:
             print(f'Saved to {path}' if path else 'Nothing to save.')

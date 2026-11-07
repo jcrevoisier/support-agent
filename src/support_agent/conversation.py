@@ -48,14 +48,19 @@ class Conversation:
     def close(self) -> Path | None:
         """Save the conversation one last time and wait for every save to finish. Call it when the customer leaves.
 
-        Returns the saved file, or ``None`` if the customer never wrote anything.
+        Returns the saved file, or ``None`` if the customer never wrote anything. Raises ``RuntimeError`` if the final
+        save failed.
         """
         transcript = self.transcript
+        final_save = None
         if any(message.role == 'customer' for message in transcript):
-            self._saver.submit(self._save, transcript, self.ticket)
+            final_save = self._saver.submit(self._save, transcript, self.ticket)
         self._saver.shutdown(wait=True)
-        path = storage.path_for(self.id)
-        return path if path.exists() else None
+        if final_save is None:
+            return None
+        if not final_save.result():
+            raise RuntimeError(f'Could not save conversation {self.id}')
+        return storage.path_for(self.id)
 
     @property
     def transcript(self) -> list[Message]:
@@ -70,17 +75,19 @@ class Conversation:
         ticket = self._state().get('ticket')
         return Ticket.model_validate(ticket) if ticket else None
 
-    def _save(self, transcript: list[Message], ticket: Ticket | None) -> None:
-        """Summarize and save the conversation. Runs on ``_saver``, one save at a time."""
+    def _save(self, transcript: list[Message], ticket: Ticket | None) -> bool:
+        """Summarize and save the conversation. Runs on ``_saver``, one save at a time. Returns whether it worked."""
         try:
-            try:
-                summary = storage.summarize(transcript)
-            except Exception:
-                logger.exception('Could not summarize conversation %s', self.id)
-                summary = None
+            summary = storage.summarize(transcript)
+        except Exception:
+            logger.exception('Could not summarize conversation %s', self.id)
+            summary = None
+        try:
             storage.save(self.id, transcript, ticket, summary)
         except Exception:
             logger.exception('Could not save conversation %s', self.id)
+            return False
+        return True
 
     def _state(self) -> dict:
         return self.agent.get_state(self.config).values

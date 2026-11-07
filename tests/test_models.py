@@ -26,6 +26,7 @@ def test_ticket():
     assert ticket.urgency == Urgency.MEDIUM
 
 
-def test_ticket_needs_a_description():
+@pytest.mark.parametrize('description', ['', '   '])
+def test_ticket_needs_a_description(description):
     with pytest.raises(ValidationError, match='at least 1 character'):
-        Ticket(order_number='1001', category='damaged_item', description='', urgency='medium')
+        Ticket(order_number='1001', category='damaged_item', description=description, urgency='medium')
