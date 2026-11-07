@@ -1,6 +1,5 @@
 import logging
 import uuid
-from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from langchain_core.messages import AIMessage, HumanMessage
@@ -22,14 +21,12 @@ class Conversation:
         self.id = str(uuid.uuid4())
         self.config = {'configurable': {'thread_id': self.id}, 'recursion_limit': 10}
         self.failures = 0
-        self._saver = ThreadPoolExecutor(max_workers=1)
         self._add_bot_message(GREETING)
 
     def send(self, text: str) -> str:
         """Send the customer's message to the agent and return the bot's reply.
 
-        When the ticket is saved or updated, the conversation is saved in the background, so the reply does not wait
-        for the summary.
+        Saves the conversation when the ticket changes, without a summary: ``close`` adds it.
         """
         ticket_before = self._state().get('ticket')
         try:
@@ -42,25 +39,26 @@ class Conversation:
             return reply
         self.failures = 0
         if state.get('ticket') != ticket_before:
-            self._saver.submit(self._save, self.transcript, self.ticket)
+            try:
+                storage.save(self.id, self.transcript, self.ticket)
+            except OSError:
+                logger.exception('Could not save conversation %s', self.id)
         return state['messages'][-1].text
 
     def close(self) -> Path | None:
-        """Save the conversation one last time and wait for every save to finish. Call it when the customer leaves.
+        """Summarize and save the conversation. Call it when the customer leaves.
 
-        Returns the saved file, or ``None`` if the customer never wrote anything. Raises ``RuntimeError`` if the final
-        save failed.
+        Returns the saved file, or ``None`` if the customer never wrote anything.
         """
         transcript = self.transcript
-        final_save = None
-        if any(message.role == 'customer' for message in transcript):
-            final_save = self._saver.submit(self._save, transcript, self.ticket)
-        self._saver.shutdown(wait=True)
-        if final_save is None:
+        if not any(message.role == 'customer' for message in transcript):
             return None
-        if not final_save.result():
-            raise RuntimeError(f'Could not save conversation {self.id}')
-        return storage.path_for(self.id)
+        try:
+            summary = storage.summarize(transcript)
+        except Exception:
+            logger.exception('Could not summarize conversation %s', self.id)
+            summary = None
+        return storage.save(self.id, transcript, self.ticket, summary)
 
     @property
     def transcript(self) -> list[Message]:
@@ -74,20 +72,6 @@ class Conversation:
     def ticket(self) -> Ticket | None:
         ticket = self._state().get('ticket')
         return Ticket.model_validate(ticket) if ticket else None
-
-    def _save(self, transcript: list[Message], ticket: Ticket | None) -> bool:
-        """Summarize and save the conversation. Runs on ``_saver``, one save at a time. Returns whether it worked."""
-        try:
-            summary = storage.summarize(transcript)
-        except Exception:
-            logger.exception('Could not summarize conversation %s', self.id)
-            summary = None
-        try:
-            storage.save(self.id, transcript, ticket, summary)
-        except Exception:
-            logger.exception('Could not save conversation %s', self.id)
-            return False
-        return True
 
     def _state(self) -> dict:
         return self.agent.get_state(self.config).values

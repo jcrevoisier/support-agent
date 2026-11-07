@@ -14,7 +14,7 @@ outcome."""
 
 
 class Summary(BaseModel):
-    summary: str
+    text: str
     key_points: list[str]
 
 
@@ -22,8 +22,7 @@ class ConversationRecord(BaseModel):
     id: str
     saved_at: datetime
     ticket: Ticket | None
-    summary: str | None
-    key_points: list[str]
+    summary: Summary | None
     transcript: list[Message]
 
 
@@ -38,20 +37,15 @@ def save(
         id=conversation_id,
         saved_at=datetime.now(UTC),
         ticket=ticket,
-        summary=summary.summary if summary else None,
-        key_points=summary.key_points if summary else [],
+        summary=summary,
         transcript=transcript,
     )
     CONVERSATIONS_DIR.mkdir(exist_ok=True)
-    path = path_for(conversation_id)
+    path = CONVERSATIONS_DIR / f'{conversation_id}.json'
     temporary = path.with_suffix('.tmp')
     temporary.write_text(record.model_dump_json(indent=2))
     temporary.replace(path)
     return path
-
-
-def path_for(conversation_id: str) -> Path:
-    return CONVERSATIONS_DIR / f'{conversation_id}.json'
 
 
 def summarize(transcript: list[Message]) -> Summary:

@@ -4,6 +4,8 @@ from support_agent.conversation import Conversation
 
 LOG_FILE = 'support-agent.log'
 
+logger = logging.getLogger(__name__)
+
 
 def main() -> None:
     logging.basicConfig(filename=LOG_FILE, level=logging.INFO, format='%(asctime)s %(levelname)s %(name)s %(message)s')
@@ -20,8 +22,9 @@ def main() -> None:
         try:
             path = chat.close()
         except KeyboardInterrupt:
-            print('Finishing the save before exiting…')
-        except RuntimeError:
+            print('Stopped before the conversation was saved.')
+        except OSError:
+            logger.exception('Could not save conversation %s', chat.id)
             print(f'Could not save the conversation. See {LOG_FILE}.')
         else:
             print(f'Saved to {path}' if path else 'Nothing to save.')

@@ -59,34 +59,27 @@ def test_failure_count_resets_after_a_reply():
     assert chat.send('1001') == RETRY_REPLY
 
 
-def test_ticket_update_saves_the_conversation(monkeypatch):
-    saves = []
-
-    def summarize(transcript):
-        saves.append(len(transcript))
-        return storage.Summary(summary='Lamp arrived broken.', key_points=[])
-
-    monkeypatch.setattr(storage, 'summarize', summarize)
+def test_ticket_update_saves_the_conversation(fake_storage):
     ticket = {'order_number': '1001', 'category': 'damaged_item', 'description': 'Lamp is broken.', 'urgency': 'low'}
     save = AIMessage('', tool_calls=[{'name': 'save_ticket', 'args': ticket, 'id': 'call-1'}])
     chat = conversation("What's your order number?", save, 'I logged that your desk lamp arrived broken.')
 
     chat.send('My lamp is broken')
+    assert list(fake_storage.iterdir()) == [], 'no save while the ticket is unchanged'
+
     assert chat.send('1001') == 'I logged that your desk lamp arrived broken.'
     assert chat.ticket == Ticket(**ticket)
-
-    record = json.loads(chat.close().read_text())
-    assert saves == [5, 5], 'one save for the ticket, one when the chat closes'
+    record = json.loads((fake_storage / f'{chat.id}.json').read_text())
     assert record['ticket'] == ticket
-    assert record['summary'] == 'Lamp arrived broken.'
+    assert record['summary'] is None, 'the summary is added when the chat closes'
 
 
 def test_close_saves_with_summary():
     chat = conversation('Hello! How can I help?')
     chat.send('Hi')
     record = json.loads(chat.close().read_text())
-    assert record['summary'] == 'Summary.'
-    assert len(record['transcript']) == 3
+    assert record['summary'] == {'text': 'Summary.', 'key_points': ['Point']}
+    assert record['transcript'] == [message.model_dump() for message in chat.transcript]
 
 
 def test_close_saves_when_summary_fails(monkeypatch):
@@ -98,7 +91,7 @@ def test_close_saves_when_summary_fails(monkeypatch):
     chat.send('Hi')
     record = json.loads(chat.close().read_text())
     assert record['summary'] is None
-    assert len(record['transcript']) == 3
+    assert record['transcript'] == [message.model_dump() for message in chat.transcript]
 
 
 def test_close_without_customer_message_saves_nothing(fake_storage):
@@ -113,5 +106,5 @@ def test_close_reports_a_failed_save(monkeypatch):
     monkeypatch.setattr(storage, 'save', broken_save)
     chat = conversation('Hello! How can I help?')
     chat.send('Hi')
-    with pytest.raises(RuntimeError, match='Could not save conversation'):
+    with pytest.raises(OSError):
         chat.close()

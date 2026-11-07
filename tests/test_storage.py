@@ -14,16 +14,14 @@ def test_save(fake_storage):
     record = json.loads(path.read_text())
     assert record['ticket'] == TICKET.model_dump(mode='json')
     assert record['summary'] is None
-    assert record['key_points'] == []
     assert record['transcript'] == [message.model_dump() for message in TRANSCRIPT]
     assert list(fake_storage.iterdir()) == [path], 'no temporary file left behind'
 
 
 def test_save_with_summary():
-    summary = storage.Summary(summary='Lamp arrived broken.', key_points=['Order 1001'])
+    summary = storage.Summary(text='Lamp arrived broken.', key_points=['Order 1001'])
     record = json.loads(storage.save('chat-1', TRANSCRIPT, TICKET, summary).read_text())
-    assert record['summary'] == 'Lamp arrived broken.'
-    assert record['key_points'] == ['Order 1001']
+    assert record['summary'] == summary.model_dump()
 
 
 def test_save_replaces_previous_version():
