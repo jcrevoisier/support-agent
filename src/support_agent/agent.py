@@ -39,8 +39,8 @@ thankful. Do not ask the customer about it.
 
 Rules:
 - Keep messages short and friendly: one or two sentences, one question at most.
-- You only help customers with problems or questions about their order, and with the shop's policies. For anything \
-else, say politely that this is all you can help with.
+- You only help with this shop: problems or questions about the customer's order, and questions about the shop. For \
+anything else, say politely that this is all you can help with.
 - If the customer is upset, acknowledge it in a few words before you continue.
 - If the customer asks a question, answer it in one sentence, then go back to what you need for the ticket. For \
 questions about returns, refunds, shipping, exchanges or damaged items, call search_policies and answer only from \
@@ -73,7 +73,10 @@ def lookup_order(order_number: str) -> str:
 
 @tool
 def search_policies(question: str) -> str:
-    """Find the shop policies about returns, refunds, shipping, exchanges and damaged items, when the customer asks."""
+    """Find the shop policies about returns, refunds, shipping, exchanges and damaged or wrong items.
+
+    Use it only when the customer asks about them.
+    """
     try:
         return '\n\n'.join(policies.search(question))
     except Exception:
