@@ -105,7 +105,7 @@ SCENARIOS = [
         'Upset after the ticket',
         [
             'My running shoes arrived damaged, order 1005.',
-            "Seriously? That's all? I've been waiting two weeks for these and you can't even tell me what happens next?",
+            "Seriously? That's all? I've waited two weeks for these and you can't even tell me what happens next?",
         ],
         {'order_number': '1005', 'category': 'damaged_item', 'urgency': 'medium', 'sentiment': 'negative'},
     ),

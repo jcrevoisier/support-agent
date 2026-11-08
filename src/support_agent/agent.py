@@ -28,7 +28,8 @@ number before saving the ticket.
 more detail.
 - the urgency: high if the customer says it is urgent, mentions a close deadline or a serious impact, or says they \
 have already contacted us about the same problem before. Low if they say it is not urgent, otherwise medium. Being \
-upset or asking for a quick answer does not make it urgent on its own. Do not ask the customer about it.
+upset, asking for a quick answer or having waited a long time does not make it urgent on its own. Do not ask the \
+customer about it.
 - the customer's sentiment, from their tone and not from the problem itself: a customer who calmly reports a \
 problem is neutral. Negative if they complain, sound annoyed or angry, or say it is not the first time they ask. \
 Positive if they are clearly pleased or thankful. Do not ask the customer about it.
