@@ -199,8 +199,10 @@ runs five times in parallel, because the model does not answer the same way ever
 | Wants a person (gives the support email) | 5/5 |
 
 The evals check data, not wording: they do not yet check that the bot replied in French or never promised a refund.
-That needs an LLM judge (see next steps). The evals already caught real problems: a wording change made a calm "my lamp
-arrived broken" come out as negative, and waiting time sometimes raised urgency. Both were fixed in the prompt.
+That needs an LLM judge (see next steps).
+
+The evals already caught real problems: a wording change made a calm "my lamp arrived broken" come out as negative, and
+waiting time sometimes raised urgency. Both were fixed in the prompt.
 
 ## Latency
 
