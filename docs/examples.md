@@ -112,7 +112,7 @@ The bot answers from `policies.md` (found with `search_policies`), then goes bac
 
 > **Bot:** Hi! How can I help you today?
 > **Customer:** This is ridiculous, the mug from order 1003 arrived completely smashed!!
-> **Bot:** I'm sorry it arrived smashed. Damaged items should be reported within 14 days of delivery with a photo; the shop's policy allows a replacement or full refund, and you don't need to return the item. I've logged the smashed coffee mug, and a colleague will contact you soon.
+> **Bot:** I'm sorry, that's really frustrating. I've logged that the coffee mug from order 1003 arrived completely smashed, and a colleague will contact you soon.
 
 ```json
 {

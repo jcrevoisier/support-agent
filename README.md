@@ -50,17 +50,16 @@ Test orders:
 ```
 Bot: Hi! How can I help you today?
 You: This is ridiculous, the mug from order 1003 arrived completely smashed!!
-Bot: I'm sorry, that's frustrating. Damaged items must be reported within 14 days of delivery with a photo; a
-     replacement or full refund may be offered, and you don't need to return the item. I've logged that the coffee
-     mug from order 1003 arrived completely smashed, and a colleague will contact you soon.
+Bot: I'm sorry, that's really frustrating. I've logged that the coffee mug from order 1003 arrived completely smashed,
+     and a colleague will contact you soon.
 ```
 
 Saved to `conversations/<id>.json` (transcript left out):
 
 ```json
 {
-  "id": "ab779356-be4a-419e-9d0b-279abf3991ec",
-  "saved_at": "2026-11-08T09:51:53.166741Z",
+  "id": "79c634a6-c4bb-4ef9-8ac8-991af0f98ff2",
+  "saved_at": "2026-11-08T11:59:09.981616Z",
   "ticket": {
     "order_number": "1003",
     "category": "damaged_item",
@@ -69,13 +68,13 @@ Saved to `conversations/<id>.json` (transcript left out):
     "sentiment": "negative"
   },
   "summary": {
-    "text": "The customer reported that the coffee mug from order 1003 arrived completely smashed. The bot logged the issue and said a colleague would follow up; the customer may be offered a replacement or full refund without returning the item.",
+    "text": "The customer reported that the coffee mug from order 1003 arrived completely smashed and expressed negative sentiment. The issue was logged as a damaged item with medium urgency, and a colleague will contact the customer soon.",
     "key_points": [
       "Order: 1003",
       "Problem: Coffee mug arrived completely smashed",
       "Urgency: Medium",
-      "Sentiment: Negative",
-      "Outcome: Issue logged; colleague to contact customer"
+      "Customer sentiment: Negative",
+      "Outcome: Issue logged; a colleague will follow up soon"
     ]
   },
   "transcript": ["…"]
@@ -141,6 +140,8 @@ provider, add its LangChain package), and the evals show whether it still behave
 customer who has already contacted us about it. Sentiment is about the customer's tone. An angry customer with a
 broken mug is `negative` and `medium`; a calm customer flying tomorrow is `neutral` and `high`. They lead to different
 actions (how fast, and who handles it), so mixing them would hide information.
+The ticket keeps the worst sentiment of the conversation, so a customer who was angry and then says thanks is still
+flagged.
 
 **RAG at a small scale.** No knowledge base came with the assignment, so I wrote `policies.md` (returns, refunds,
 shipping, damaged items, exchanges). Each section is embedded once, on the first policy question, and the agent
@@ -164,10 +165,13 @@ never leaves a broken file.
 | Empty description or invalid value | The tool returns the validation error and the model fixes it |
 | LLM error or timeout (20 s, 2 retries) | "Could you send that again?", then the support email if it fails again |
 | Policy search fails | The bot says a colleague will help; the conversation continues |
+| Saving the ticket fails | The bot gives the support email; the conversation continues |
 | Speech-to-text fails | The customer is asked to type the message instead |
 | Text-to-speech fails | The reply is still printed |
 | Summary fails | The conversation is saved without a summary |
-| Missing API key or bad `.env` | A clear message at startup |
+| Saving the conversation fails | A message points to the log file |
+| Empty API key or invalid `LLM_MODEL_OPTIONS` | A clear message at startup |
+| Wrong API key | Handled like an LLM error, since it only fails on the first call |
 
 Errors are logged to `support-agent.log`.
 
@@ -231,8 +235,8 @@ already works on the next one.
   can't find their number is sent to the support email.
 - The bot does not know today's date, so it can't judge how late a delivery is.
 - Repeat contact is detected only when the customer says so; there is no contact history.
-- Sentiment is the value from the last time the ticket was saved, not the worst one: if the ticket is saved again
-  after an angry customer calms down, it ends up neutral.
+- The transcript and the summary are saved when the chat ends. If the program is killed, only the ticket survives,
+  and a conversation without a ticket is lost.
 - Anyone who knows an order number can see its product and status: there is no login.
 - Prompt injection is not tested automatically.
 - The log file can contain customer messages.
