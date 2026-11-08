@@ -18,7 +18,8 @@ the customer's language.
 
 ## Quick start
 
-Requires [uv](https://docs.astral.sh/uv/) and an OpenAI API key.
+Requires [uv](https://docs.astral.sh/uv/) and an OpenAI API key. On Linux, also install PortAudio:
+`sudo apt-get install libportaudio2` (macOS and Windows include it).
 
 ```
 uv sync
@@ -29,8 +30,7 @@ uv run support-agent --voice  # talk: press Enter to speak, Enter again when don
 
 Press Ctrl+D (or Ctrl+C) to end the chat. The conversation is saved to `conversations/<id>.json`.
 
-Voice mode needs a microphone (macOS asks for permission the first time). On Linux, install PortAudio first:
-`sudo apt-get install libportaudio2`.
+Voice mode needs a microphone; macOS asks for permission the first time.
 
 Test orders:
 

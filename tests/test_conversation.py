@@ -105,3 +105,18 @@ def test_close_reports_a_failed_save(monkeypatch):
     list(chat.send('Hi'))
     with pytest.raises(OSError):
         chat.close()
+
+
+def test_conversation_continues_after_a_tool_fails(monkeypatch):
+    def broken_save(*args):
+        raise OSError('Disk full')
+
+    monkeypatch.setattr(storage, 'save_ticket', broken_save)
+    ticket = {'order_number': '1001', 'category': 'damaged_item', 'description': 'Broken.', 'urgency': 'low'}
+    save = AIMessage(
+        '', tool_calls=[{'name': 'save_ticket', 'args': ticket | {'sentiment': 'neutral'}, 'id': 'call-1'}]
+    )
+    chat = conversation(save, 'Sorry, please email us.', 'Anything else?')
+
+    assert list(chat.send('Lamp 1001 is broken')) == ['Sorry, please email us.']
+    assert list(chat.send('Ok')) == ['Anything else?']

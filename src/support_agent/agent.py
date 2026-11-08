@@ -15,6 +15,8 @@ from support_agent.orders import find_order
 
 SUPPORT_EMAIL = 'support@example-shop.com'
 
+SENTIMENTS_WORST_FIRST = [Sentiment.NEGATIVE, Sentiment.NEUTRAL, Sentiment.POSITIVE]
+
 logger = logging.getLogger(__name__)
 
 PROMPT = f"""You are the support assistant of an online shop. You chat with a customer to open a support ticket.
@@ -82,7 +84,7 @@ def save_ticket(
     sentiment: Sentiment,
     config: RunnableConfig,
 ) -> str:
-    """Save the support ticket, or update it."""
+    """Save the support ticket, or update it. The ticket keeps the worst sentiment of the conversation."""
     try:
         order = find_order(order_number)
         ticket = Ticket(
@@ -96,7 +98,15 @@ def save_ticket(
         return 'Error: ' + '; '.join(f'{detail["loc"][0]}: {detail["msg"]}' for detail in error.errors())
     except ValueError as error:
         return f'Error: {error}'
-    storage.save_ticket(config['configurable']['thread_id'], ticket)
+    conversation_id = config['configurable']['thread_id']
+    try:
+        if previous := storage.load_ticket(conversation_id):
+            worst = min(previous.sentiment, ticket.sentiment, key=SENTIMENTS_WORST_FIRST.index)
+            ticket = ticket.model_copy(update={'sentiment': worst})
+        storage.save_ticket(conversation_id, ticket)
+    except (OSError, ValidationError):
+        logger.exception('Could not save the ticket of conversation %s', conversation_id)
+        return f'Error: the ticket could not be saved. Ask the customer to email {SUPPORT_EMAIL}.'
     return f'Ticket saved for order {order.number} ({order.product}, {order.status}).'
 
 
