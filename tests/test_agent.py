@@ -4,7 +4,13 @@ from support_agent import storage
 from support_agent.agent import lookup_order, save_ticket
 from support_agent.models import Ticket
 
-TICKET = {'order_number': '#1001', 'category': 'damaged_item', 'description': 'Lamp is broken.', 'urgency': 'low'}
+TICKET = {
+    'order_number': '#1001',
+    'category': 'damaged_item',
+    'description': 'Lamp is broken.',
+    'urgency': 'low',
+    'sentiment': 'neutral',
+}
 
 
 def call_save_ticket(args):

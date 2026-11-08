@@ -5,7 +5,9 @@ from support_agent.models import Message, Ticket, Urgency
 from support_agent.summary import Summary
 
 TRANSCRIPT = [Message(role='bot', content='Hi!'), Message(role='customer', content='Order 1001, my lamp is broken')]
-TICKET = Ticket(order_number='1001', category='damaged_item', description='Lamp is broken.', urgency='medium')
+TICKET = Ticket(
+    order_number='1001', category='damaged_item', description='Lamp is broken.', urgency='medium', sentiment='neutral'
+)
 SUMMARY = Summary(text='Lamp arrived broken.', key_points=['Order 1001'])
 
 

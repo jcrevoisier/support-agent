@@ -59,7 +59,7 @@ SCENARIOS = [
     Scenario(
         'Normal',
         ['My desk lamp arrived broken, the order number is 1001.'],
-        {'order_number': '1001', 'category': 'damaged_item', 'urgency': 'medium'},
+        {'order_number': '1001', 'category': 'damaged_item', 'urgency': 'medium', 'sentiment': 'neutral'},
     ),
     Scenario(
         'Unknown order, then fixed',
@@ -90,6 +90,11 @@ SCENARIOS = [
         ['My running shoes are too small. Can I return them if I wore them once?', 'Order 1005.'],
         {'order_number': '1005', 'category': {'refund', 'other'}},
         [called('search_policies')],
+    ),
+    Scenario(
+        'Angry customer',
+        ['THIS IS THE THIRD TIME I write about order 1004. My headphones are still not here, this is ridiculous!'],
+        {'order_number': '1004', 'category': 'late_delivery', 'sentiment': 'negative'},
     ),
     Scenario(
         'Wants a person',

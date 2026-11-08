@@ -4,8 +4,9 @@ from support_agent.llm import chat_model
 from support_agent.models import Message, Ticket
 
 SUMMARY_PROMPT = """Summarize this chat between an online shop's support bot and a customer, in English.
-Write a summary of one or two sentences, and a few short key points: the order, the problem, the urgency and the \
-outcome. Take the order, the problem and the urgency from the saved ticket when there is one."""
+Write a summary of one or two sentences, and a few short key points: the order, the problem, the urgency, the \
+customer's sentiment and the outcome. Take the order, the problem, the urgency and the sentiment from the saved \
+ticket when there is one."""
 
 
 class Summary(BaseModel):

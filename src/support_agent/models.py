@@ -18,6 +18,12 @@ class Urgency(StrEnum):
     HIGH = 'high'
 
 
+class Sentiment(StrEnum):
+    POSITIVE = 'positive'
+    NEUTRAL = 'neutral'
+    NEGATIVE = 'negative'
+
+
 class Message(BaseModel):
     role: Literal['bot', 'customer']
     content: str
@@ -30,3 +36,4 @@ class Ticket(BaseModel):
     category: Category
     description: str = Field(min_length=1)
     urgency: Urgency
+    sentiment: Sentiment

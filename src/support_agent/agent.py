@@ -10,7 +10,7 @@ from pydantic import ValidationError
 
 from support_agent import policies, storage
 from support_agent.llm import chat_model
-from support_agent.models import Category, Ticket, Urgency
+from support_agent.models import Category, Sentiment, Ticket, Urgency
 from support_agent.orders import find_order
 
 SUPPORT_EMAIL = 'support@example-shop.com'
@@ -28,9 +28,13 @@ number before saving the ticket.
 more detail.
 - the urgency: high if the customer says it is urgent, asks for a quick answer, or mentions a close deadline or a \
 serious impact. Low if they say it is not urgent, otherwise medium. Do not ask the customer about it.
+- the customer's sentiment, from their tone and not from the problem itself: a customer who calmly reports a \
+problem is neutral. Negative if they complain, sound annoyed or angry, or say it is not the first time they ask. \
+Positive if they are clearly pleased or thankful. Do not ask the customer about it.
 
 Rules:
 - Keep messages short and friendly: one or two sentences, one question at most.
+- If the customer is upset, acknowledge it in a few words before you continue.
 - If the customer asks a question, answer it in one sentence, then go back to what you need for the ticket. For \
 questions about returns, refunds, shipping, exchanges or damaged items, call search_policies and answer only from \
 what it returns. If you do not know the answer, say a colleague will help with it.
@@ -41,8 +45,8 @@ number, still open or update the ticket with what they told you.
 - Reply in the customer's language.
 - Call save_ticket as soon as you have everything. Only after save_ticket succeeds, tell the customer what you \
 logged (the product and the problem) and that a colleague will contact them soon.
-- If the customer corrects something or gives new information after that (for example that it is urgent), call \
-save_ticket again with the updated values."""
+- If the customer corrects something or gives new information after that (for example that it is urgent, or they \
+become upset), call save_ticket again with the updated values."""
 
 
 @tool
@@ -66,12 +70,23 @@ def search_policies(question: str) -> str:
 
 @tool
 def save_ticket(
-    order_number: str, category: Category, description: str, urgency: Urgency, config: RunnableConfig
+    order_number: str,
+    category: Category,
+    description: str,
+    urgency: Urgency,
+    sentiment: Sentiment,
+    config: RunnableConfig,
 ) -> str:
     """Save the support ticket, or update it."""
     try:
         order = find_order(order_number)
-        ticket = Ticket(order_number=order.number, category=category, description=description, urgency=urgency)
+        ticket = Ticket(
+            order_number=order.number,
+            category=category,
+            description=description,
+            urgency=urgency,
+            sentiment=sentiment,
+        )
     except ValidationError as error:
         return 'Error: ' + '; '.join(f'{detail["loc"][0]}: {detail["msg"]}' for detail in error.errors())
     except ValueError as error:

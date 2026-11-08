@@ -51,7 +51,13 @@ def test_failure_count_resets_after_a_reply():
 
 
 def test_ticket_is_saved_and_kept_at_close():
-    ticket = {'order_number': '1001', 'category': 'damaged_item', 'description': 'Lamp is broken.', 'urgency': 'low'}
+    ticket = {
+        'order_number': '1001',
+        'category': 'damaged_item',
+        'description': 'Lamp is broken.',
+        'urgency': 'low',
+        'sentiment': 'neutral',
+    }
     save = AIMessage('', tool_calls=[{'name': 'save_ticket', 'args': ticket, 'id': 'call-1'}])
     chat = conversation("What's your order number?", save, 'I logged that your desk lamp arrived broken.')
 
