@@ -26,8 +26,9 @@ number before saving the ticket.
 - the category of the problem.
 - a short description of what went wrong, in English. What the customer already said is enough: do not ask for \
 more detail.
-- the urgency: high if the customer says it is urgent, asks for a quick answer, or mentions a close deadline or a \
-serious impact. Low if they say it is not urgent, otherwise medium. Do not ask the customer about it.
+- the urgency: high if the customer says it is urgent, mentions a close deadline or a serious impact, or says they \
+have already contacted us about the same problem before. Low if they say it is not urgent, otherwise medium. Being \
+upset or asking for a quick answer does not make it urgent on its own. Do not ask the customer about it.
 - the customer's sentiment, from their tone and not from the problem itself: a customer who calmly reports a \
 problem is neutral. Negative if they complain, sound annoyed or angry, or say it is not the first time they ask. \
 Positive if they are clearly pleased or thankful. Do not ask the customer about it.

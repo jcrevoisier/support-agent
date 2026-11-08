@@ -92,9 +92,22 @@ SCENARIOS = [
         [called('search_policies')],
     ),
     Scenario(
-        'Angry customer',
+        'Angry, first contact',
+        ["My headphones from order 1004 still haven't arrived. This is ridiculous, worst shop ever!"],
+        {'order_number': '1004', 'category': 'late_delivery', 'urgency': 'medium', 'sentiment': 'negative'},
+    ),
+    Scenario(
+        'Third contact',
         ['THIS IS THE THIRD TIME I write about order 1004. My headphones are still not here, this is ridiculous!'],
-        {'order_number': '1004', 'category': 'late_delivery', 'sentiment': 'negative'},
+        {'order_number': '1004', 'category': 'late_delivery', 'urgency': 'high', 'sentiment': 'negative'},
+    ),
+    Scenario(
+        'Upset after the ticket',
+        [
+            'My running shoes arrived damaged, order 1005.',
+            "Seriously? That's all? I've been waiting two weeks for these and you can't even tell me what happens next?",
+        ],
+        {'order_number': '1005', 'category': 'damaged_item', 'urgency': 'medium', 'sentiment': 'negative'},
     ),
     Scenario(
         'Wants a person',
