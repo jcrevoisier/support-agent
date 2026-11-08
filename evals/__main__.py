@@ -39,7 +39,7 @@ Check = Callable[[Run], str | None]
 class Scenario:
     name: str
     messages: list[str]
-    ticket: dict[str, str | set[str]]
+    ticket: dict[str, str | set[str]] | None
     checks: list[Check] = field(default_factory=list)
 
 
@@ -116,6 +116,17 @@ SCENARIOS = [
         [never_saved('1006')],
     ),
     Scenario(
+        'General question',
+        ['How long does standard delivery take?', 'Ok thanks, that is all.'],
+        None,
+    ),
+    Scenario(
+        'No order number',
+        ['My backpack has not arrived yet.', "I don't have the order number, I deleted the email.", 'No idea, sorry.'],
+        None,
+        [gives_support_email],
+    ),
+    Scenario(
         'Wants a person',
         ['My backpack from order 1006 is taking forever. I want to talk to a human.'],
         {'order_number': '1006', 'category': 'late_delivery'},
@@ -165,9 +176,12 @@ def _run(scenario: Scenario) -> Run:
 
 
 def _failures(scenario: Scenario, run: Run) -> list[str]:
-    """Return why the run failed, or an empty list if it passed."""
+    """Return why the run failed, or an empty list if it passed. A scenario without a ticket expects none."""
     if any(reply in (RETRY_REPLY, GIVE_UP_REPLY) for reply in run.replies):
         return ['agent error']
+    if scenario.ticket is None:
+        failures = ['saved a ticket'] if run.ticket else []
+        return failures + [failure for check in scenario.checks if (failure := check(run))]
     if run.ticket is None:
         return ['no ticket saved']
     failures = [

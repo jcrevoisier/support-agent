@@ -121,7 +121,7 @@ more than deep reasoning, so I compared models with the evals:
 
 | Model | Evals passed | Seconds per turn |
 |---|---|---|
-| `gpt-6-luna`, reasoning low | 55/55 | ~5.5 |
+| `gpt-6-luna`, reasoning low | 65/65 | ~5.5 |
 | `gpt-5.4-mini`, no reasoning | fails "Second problem" (1/10) | ~2.1 |
 | `gpt-4.1-mini` | fails: asks the customer for the urgency | ~1.7 |
 
@@ -194,6 +194,8 @@ runs five times in parallel, because the model does not answer the same way ever
 | Third contact (negative, high) | 5/5 |
 | Upset after the ticket (negative, still medium) | 5/5 |
 | Second problem (the ticket keeps the first one) | 5/5 |
+| General question (answered, no ticket) | 5/5 |
+| No order number (no ticket, gives the support email) | 5/5 |
 | Wants a person (gives the support email) | 5/5 |
 
 The evals check data, not wording: they do not yet check that the bot replied in French or never promised a refund.
@@ -221,7 +223,8 @@ already works on the next one.
 
 - One problem per conversation: the bot asks the customer to start a new conversation for a second problem. This is
   a prompt rule, not enforced in code, and the summary still mentions the second problem.
-- The bot needs an order number; general questions without an order don't create a ticket.
+- Without an order number there is no ticket: general questions are answered from the policies, and a customer who
+  can't find their number is sent to the support email.
 - The bot does not know today's date, so it can't judge how late a delivery is.
 - Repeat contact is detected only when the customer says so; there is no contact history.
 - Sentiment is the value from the last time the ticket was saved, not the worst one: if the ticket is saved again
