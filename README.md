@@ -238,6 +238,6 @@ already works on the next one.
 
 1. **Production basics:** database and API, contact history from past tickets, routing and escalation rules.
 2. **Quality and safety:** an LLM judge in the evals (language, no promises, no invented policy, prompt injection), and
-   more cases (several tickets per chat, no order number, today's date).
+   more cases (several tickets per chat, today's date for late orders).
 3. **Experience:** smoother voice (hands-free, interruptions, faster speech), memory across conversations for
    returning customers, a faster model compared with the evals.
