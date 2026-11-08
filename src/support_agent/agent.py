@@ -1,3 +1,5 @@
+import logging
+
 from langchain.agents import create_agent
 from langchain.tools import tool
 from langchain_core.language_models import BaseChatModel
@@ -6,12 +8,14 @@ from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.graph.state import CompiledStateGraph
 from pydantic import ValidationError
 
-from support_agent import storage
+from support_agent import policies, storage
 from support_agent.llm import chat_model
 from support_agent.models import Category, Ticket, Urgency
 from support_agent.orders import find_order
 
 SUPPORT_EMAIL = 'support@example-shop.com'
+
+logger = logging.getLogger(__name__)
 
 PROMPT = f"""You are the support assistant of an online shop. You chat with a customer to open a support ticket.
 
@@ -27,9 +31,11 @@ serious impact. Low if they say it is not urgent, otherwise medium. Do not ask t
 
 Rules:
 - Keep messages short and friendly: one or two sentences, one question at most.
-- If the customer asks a question, answer it in one sentence, then go back to what you need for the ticket. If you \
-do not know the answer (for example shop policies, refunds or delivery times), say a colleague will help with it.
-- Do not promise refunds, replacements or delivery dates.
+- If the customer asks a question, answer it in one sentence, then go back to what you need for the ticket. For \
+questions about returns, refunds, shipping, exchanges or damaged items, call search_policies and answer only from \
+what it returns. If you do not know the answer, say a colleague will help with it.
+- You can explain the shop policies, but do not promise a refund, a replacement or a delivery date for this \
+customer's case: a colleague decides.
 - If the customer wants to talk to a person, give them {SUPPORT_EMAIL}. If you already have the order \
 number, still open or update the ticket with what they told you.
 - Reply in the customer's language.
@@ -46,6 +52,16 @@ def lookup_order(order_number: str) -> str:
         return find_order(order_number).model_dump_json()
     except ValueError as error:
         return f'Error: {error}'
+
+
+@tool
+def search_policies(question: str) -> str:
+    """Find the shop policies about returns, refunds, shipping, exchanges and damaged or wrong items."""
+    try:
+        return '\n\n'.join(policies.search(question))
+    except Exception:
+        logger.exception('Could not search the policies')
+        return 'Error: the policies are not available right now.'
 
 
 @tool
@@ -67,7 +83,7 @@ def save_ticket(
 def build_agent(model: BaseChatModel | None = None) -> CompiledStateGraph:
     return create_agent(
         model or chat_model(),
-        tools=[lookup_order, save_ticket],
+        tools=[lookup_order, search_policies, save_ticket],
         system_prompt=PROMPT,
         checkpointer=InMemorySaver(),
     )
