@@ -121,9 +121,11 @@ more than deep reasoning, so I compared models with the evals:
 
 | Model | Evals passed | Seconds per turn |
 |---|---|---|
-| `gpt-6-luna`, reasoning low | 65/65 | ~5.5 |
+| `gpt-6-luna`, reasoning low | 130/130 | ~5.5 |
 | `gpt-5.4-mini`, no reasoning | fails "Second problem" (1/10) | ~2.1 |
 | `gpt-4.1-mini` | fails: asks the customer for the urgency | ~1.7 |
+
+The other two models were compared on an earlier version of the prompt.
 
 `gpt-5.4-mini` is about 2.5 times faster. Making three implicit prompt rules explicit (choose the category yourself,
 only confirm an order that contradicts the customer, update the ticket when their mood changes) brought it to 50/50,
@@ -172,31 +174,31 @@ Errors are logged to `support-agent.log`.
 ## Tests and evals
 
 ```
-uv run pytest                    # 37 tests, offline, under a second
-uv run python -m evals --runs 5  # real model, about 2 minutes, a few cents
+uv run pytest                    # 43 tests, offline, under a second
+uv run python -m evals --runs 10 # real model, about 5 minutes, a few cents
 ```
 
 The tests use a fake model, so they check the code (tools, validation, error handling, storage, voice loop) without
 calling any API.
 
 The evals play fixed customer conversations against the real model and check the saved ticket exactly. Each scenario
-runs five times in parallel, because the model does not answer the same way every time.
+runs ten times in parallel, because the model does not answer the same way every time.
 
 | Scenario | Passed |
 |---|---|
-| Normal | 5/5 |
-| Unknown order, then fixed | 5/5 |
-| Order mismatch, then corrected (and never saved for the wrong order) | 5/5 |
-| Urgent, said later | 5/5 |
-| French | 5/5 |
-| Policy question (and the policy search was used) | 5/5 |
-| Angry, first contact (negative, medium) | 5/5 |
-| Third contact (negative, high) | 5/5 |
-| Upset after the ticket (negative, still medium) | 5/5 |
-| Second problem (the ticket keeps the first one) | 5/5 |
-| General question (answered, no ticket) | 5/5 |
-| No order number (no ticket, gives the support email) | 5/5 |
-| Wants a person (gives the support email) | 5/5 |
+| Normal | 10/10 |
+| Unknown order, then fixed | 10/10 |
+| Order mismatch, then corrected (and never saved for the wrong order) | 10/10 |
+| Urgent, said later | 10/10 |
+| French | 10/10 |
+| Policy question (and the policy search was used) | 10/10 |
+| Angry, first contact (negative, medium) | 10/10 |
+| Third contact (negative, high) | 10/10 |
+| Upset after the ticket (negative, still medium) | 10/10 |
+| Second problem (the ticket keeps the first one) | 10/10 |
+| General question (answered, no ticket) | 10/10 |
+| No order number (no ticket, gives the support email) | 10/10 |
+| Wants a person (gives the support email) | 10/10 |
 
 The evals check data, not wording: they do not yet check that the bot replied in French or never promised a refund.
 That needs an LLM judge (see next steps).
