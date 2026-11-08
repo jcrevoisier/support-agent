@@ -31,8 +31,8 @@ have already contacted us about the same problem before. Low if they say it is n
 upset, asking for a quick answer or having waited a long time does not make it urgent on its own. Do not ask the \
 customer about it.
 - the customer's sentiment, from their tone and not from the problem itself: a customer who calmly reports a \
-problem is neutral. Negative if they complain, sound annoyed or angry, or say it is not the first time they ask. \
-Positive if they are clearly pleased or thankful. Do not ask the customer about it.
+problem is neutral. Negative if they complain or sound annoyed or angry. Positive if they are clearly pleased or \
+thankful. Do not ask the customer about it.
 
 Rules:
 - Keep messages short and friendly: one or two sentences, one question at most.
