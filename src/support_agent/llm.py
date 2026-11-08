@@ -6,13 +6,13 @@ from langchain.embeddings import init_embeddings
 from langchain_core.embeddings import Embeddings
 from langchain_core.language_models import BaseChatModel
 
-DEFAULT_MODEL = 'openai:gpt-5.4-mini'
+DEFAULT_MODEL = 'openai:gpt-6-luna'
 DEFAULT_EMBEDDING_MODEL = 'openai:text-embedding-3-small'
 
 
 def chat_model() -> BaseChatModel:
     model = os.getenv('LLM_MODEL', DEFAULT_MODEL)
-    default_options = '{"reasoning_effort": "none"}' if model.startswith('openai:') else '{}'
+    default_options = '{"reasoning_effort": "low"}' if model.startswith('openai:') else '{}'
     options = json.loads(os.getenv('LLM_MODEL_OPTIONS', default_options))
     return init_chat_model(model, timeout=20, max_retries=2, **options)
 

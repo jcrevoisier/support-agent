@@ -110,6 +110,12 @@ SCENARIOS = [
         {'order_number': '1005', 'category': 'damaged_item', 'urgency': 'medium', 'sentiment': 'negative'},
     ),
     Scenario(
+        'Second problem',
+        ['My desk lamp arrived broken, order 1001.', "Also, my backpack from order 1006 hasn't arrived."],
+        {'order_number': '1001', 'category': 'damaged_item'},
+        [never_saved('1006')],
+    ),
+    Scenario(
         'Wants a person',
         ['My backpack from order 1006 is taking forever. I want to talk to a human.'],
         {'order_number': '1006', 'category': 'late_delivery'},

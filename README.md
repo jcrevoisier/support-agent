@@ -116,18 +116,20 @@ customer ──text or voice──▶ Conversation ──▶ LangChain agent (LL
 
 ## Design choices
 
-**The model.** `gpt-5.4-mini` with no reasoning. The task needs reliable tool calls, instruction following and low
-latency, not deep reasoning, so I compared models with the evals and picked the fastest one that passes them all:
+**The model.** `gpt-6-luna` with low reasoning effort. The task needs reliable tool calls and instruction following
+more than deep reasoning, so I compared models with the evals:
 
 | Model | Evals passed | Seconds per turn |
 |---|---|---|
-| `gpt-6-luna`, reasoning low | 50/50 | ~5.7 |
-| `gpt-5.4-mini`, no reasoning | 50/50 | ~2.1 |
+| `gpt-6-luna`, reasoning low | 55/55 | ~5.5 |
+| `gpt-5.4-mini`, no reasoning | fails "Second problem" (1/10) | ~2.1 |
 | `gpt-4.1-mini` | fails: asks the customer for the urgency | ~1.7 |
 
-At first `gpt-5.4-mini` failed a few scenarios: it asked the customer for the category, asked to confirm orders that
-matched, and did not update the ticket when the customer got upset. The larger model had guessed these rules; making
-them explicit in the prompt fixed the smaller one, and the larger one still passes.
+`gpt-5.4-mini` is about 2.5 times faster. Making three implicit prompt rules explicit (choose the category yourself,
+only confirm an order that contradicts the customer, update the ticket when their mood changes) brought it to 50/50,
+but it does not follow the one-problem-per-conversation rule, even when the rule is in the tool description. For a
+text chat, a few seconds on the turn that saves the ticket is acceptable, so I kept the more reliable model. For
+voice, I would move hard rules like this one into code, so that a faster model is safe to use.
 
 Any model LangChain supports can be used by setting `LLM_MODEL` and `LLM_MODEL_OPTIONS` in `.env` (for another
 provider, add its LangChain package), and the evals show whether it still behaves. Voice uses OpenAI's
@@ -191,6 +193,7 @@ runs five times in parallel, because the model does not answer the same way ever
 | Angry, first contact (negative, medium) | 5/5 |
 | Third contact (negative, high) | 5/5 |
 | Upset after the ticket (negative, still medium) | 5/5 |
+| Second problem (the ticket keeps the first one) | 5/5 |
 | Wants a person (gives the support email) | 5/5 |
 
 The evals check data, not wording: they do not yet check that the bot replied in French or never promised a refund.
@@ -199,7 +202,8 @@ arrived broken" come out as negative, and waiting time sometimes raised urgency.
 
 ## Latency
 
-A turn that saves the ticket makes three model calls (look up, save, reply) and takes about 2.5 s.
+A normal turn is one model call, about 1.5 s. A turn that saves the ticket makes three calls (look up, save, reply)
+and takes about 4 to 6 s.
 Voice adds about 1 s for speech-to-text and 1.5 s before the bot starts speaking. While one message plays, the agent
 already works on the next one.
 
@@ -215,7 +219,8 @@ already works on the next one.
 
 ## Known limitations
 
-- One ticket per conversation: a second problem replaces the first ticket.
+- One problem per conversation: the bot asks the customer to start a new conversation for a second problem. This is
+  a prompt rule, not enforced in code, and the summary still mentions the second problem.
 - The bot needs an order number; general questions without an order don't create a ticket.
 - The bot does not know today's date, so it can't judge how late a delivery is.
 - Repeat contact is detected only when the customer says so; there is no contact history.

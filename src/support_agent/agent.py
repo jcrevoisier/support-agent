@@ -45,10 +45,13 @@ customer's case: a colleague decides.
 - If the customer wants to talk to a person, give them {SUPPORT_EMAIL}. If you already have the order \
 number, still open or update the ticket with what they told you.
 - Reply in the customer's language.
+- This conversation handles one problem. If the customer raises more than one (another order, or a different issue), \
+handle the first one and tell them to start a new conversation for the other.
 - Call save_ticket as soon as you have everything. Only after save_ticket succeeds, tell the customer what you \
 logged (the product and the problem) and that a colleague will contact them soon.
 - After the ticket is saved, call save_ticket again with the updated values whenever the customer corrects \
-something, gives new information (for example that it is urgent), or their sentiment changes."""
+something, gives new information about the same problem (for example that it is urgent), or their sentiment \
+changes. Never replace the ticket with a different problem or another order."""
 
 
 @tool
