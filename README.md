@@ -207,3 +207,13 @@ already works on the next one.
 - Anyone who knows an order number can see its product and status: there is no login.
 - Prompt injection is not tested automatically.
 - The log file can contain customer messages.
+
+## Potential improvements
+
+- API service instead of the CLI
+- Conversations and tickets in a database
+- Routing and escalation rules using urgency and sentiment
+- Customer identity (login or email), to protect order data and use their past tickets
+- LLM judge in the evals (language, promises, invented policies, prompt injection)
+- Vector database for the knowledge base
+- Improve the voice agent with a framework, to make it faster and more fluid: no pressing Enter to talk, interruptions, etc.
