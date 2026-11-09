@@ -198,16 +198,11 @@ already works on the next one.
 
 ## Known limitations
 
-- One problem per conversation: the bot asks the customer to start a new conversation for a second problem. This is
-  a prompt rule, not enforced in code, and the summary still mentions the second problem.
-- Without an order number there is no ticket: general questions are answered from the policies, and a customer who
-  can't find their number is sent to the support email.
-- The bot does not know today's date, so it can't judge how late a delivery is.
-- Repeat contact is detected only when the customer says so, there is no contact history.
-- The transcript and the summary are saved when the chat ends. If the program is killed, only the ticket survives,
-  and a conversation without a ticket is lost.
-- Anyone who knows an order number can see its product and status: there is no login.
-- Prompt injection is not tested automatically.
+- One problem per conversation: a second problem gets "please start a new conversation". This is a prompt rule, not
+  enforced in code.
+- No ticket without an order number.
+- The bot doesn't know today's date, so it can't tell whether a delivery is late.
+- The transcript and summary are only saved when the chat ends, so they are lost if the program is killed.
 - The log file can contain customer messages.
 
 ## Potential improvements
