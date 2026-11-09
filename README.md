@@ -54,7 +54,7 @@ Bot: I'm sorry, that's really frustrating. I've logged that the coffee mug from 
      and a colleague will contact you soon.
 ```
 
-Saved to `conversations/<id>.json` (transcript left out):
+Saved to `conversations/<id>.json`:
 
 ```json
 {
@@ -124,31 +124,11 @@ more than deep reasoning, so I compared models with the evals:
 | `gpt-5.4-mini`, no reasoning | fails "Second problem" (1/10) | ~2.1 |
 | `gpt-4.1-mini` | fails: asks the customer for the urgency | ~1.7 |
 
-The other two models were compared on an earlier version of the prompt.
-
-`gpt-5.4-mini` is about 2.5 times faster. Making three implicit prompt rules explicit (choose the category yourself,
-only confirm an order that contradicts the customer, update the ticket when their mood changes) brought it to 50/50,
-but it does not follow the one-problem-per-conversation rule, even when the rule is in the tool description. For a
-text chat, a few seconds on the turn that saves the ticket is acceptable, so I kept the more reliable model. For
-voice, I would move hard rules like this one into code, so that a faster model is safe to use.
-
-Any model LangChain supports can be used by setting `LLM_MODEL` and `LLM_MODEL_OPTIONS` in `.env` (for another
-provider, add its LangChain package), and the evals show whether it still behaves. Voice uses OpenAI's
-`gpt-4o-mini-transcribe` and `gpt-4o-mini-tts`: fast, cheap, and multilingual without any setting.
+Voice uses OpenAI's `gpt-4o-mini-transcribe` and `gpt-4o-mini-tts`: fast, cheap, and multilingual without any setting.
 
 **Urgency and sentiment are separate.** Urgency is about the problem: high for a deadline, a serious impact, or a
 customer who has already contacted us about it. Sentiment is about the customer's tone. An angry customer with a
-broken mug is `negative` and `medium`; a calm customer flying tomorrow is `neutral` and `high`. They lead to different
-actions (how fast, and who handles it), so mixing them would hide information.
-The ticket keeps the worst sentiment of the conversation, so a customer who was angry and then says thanks is still
-flagged.
-
-**RAG at a small scale.** No knowledge base came with the assignment, so I wrote `policies.md` (returns, refunds,
-shipping, damaged items, exchanges). Each section is embedded once, on the first policy question, and the agent
-searches it with a tool. At five sections the whole file would fit in the prompt; retrieval is there to show the
-pattern, which stays the same with hundreds of help articles. The prompt tells the bot to answer only from what the
-search returns, to explain the policy without promising an outcome for this customer, and to hand over to a colleague
-when it does not know.
+broken mug is `negative` and `medium`; a calm customer flying tomorrow is `neutral` and `high`.
 
 **Memory.** The LLM API is stateless, so a LangGraph checkpointer keeps each conversation's messages and tool calls
 and sends them with every turn.
@@ -169,7 +149,7 @@ never leaves a broken file.
 | Speech-to-text fails | The customer is asked to type the message instead |
 | Text-to-speech fails | The reply is still printed |
 | Summary fails | The conversation is saved without a summary |
-| Saving the conversation fails | A message points to the log file |
+| Saving the conversation fails | "Could not save the conversation", with the details in the log |
 | Empty API key or invalid `LLM_MODEL_OPTIONS` | A clear message at startup |
 | Wrong API key | Handled like an LLM error, since it only fails on the first call |
 
@@ -178,7 +158,7 @@ Errors are logged to `support-agent.log`.
 ## Tests and evals
 
 ```
-uv run pytest                    # 43 tests, offline, under a second
+uv run pytest                    # 41 tests, offline, under a second
 uv run python -m evals --runs 10 # real model, about 5 minutes, a few cents
 ```
 
@@ -205,10 +185,7 @@ runs ten times in parallel, because the model does not answer the same way every
 | Wants a person (gives the support email) | 10/10 |
 
 The evals check data, not wording: they do not yet check that the bot replied in French or never promised a refund.
-That needs an LLM judge (see next steps).
-
-The evals already caught real problems: a wording change made a calm "my lamp arrived broken" come out as negative, and
-waiting time sometimes raised urgency. Both were fixed in the prompt.
+That would need an LLM judge.
 
 ## Latency
 
@@ -217,16 +194,6 @@ and takes about 4 to 6 s.
 Voice adds about 1 s for speech-to-text and 1.5 s before the bot starts speaking. While one message plays, the agent
 already works on the next one.
 
-## In production
-
-- **Storage:** conversations in Postgres through LangGraph's `PostgresSaver`, tickets sent to the helpdesk or a tickets table.
-- **Service:** a FastAPI endpoint instead of the command line, so a web chat or phone line can use it, with a timeout
-  that closes abandoned chats.
-- **Routing:** the helpdesk's rules use urgency and sentiment to pick the queue and escalate.
-- **Knowledge base:** a vector database (for example pgvector), re-indexed when the policies change.
-- **Voice:** a voice framework for hands-free listening, interruptions and phone calls.
-- **Monitoring:** traces of each conversation, and the evals run on every prompt change.
-
 ## Known limitations
 
 - One problem per conversation: the bot asks the customer to start a new conversation for a second problem. This is
@@ -234,18 +201,9 @@ already works on the next one.
 - Without an order number there is no ticket: general questions are answered from the policies, and a customer who
   can't find their number is sent to the support email.
 - The bot does not know today's date, so it can't judge how late a delivery is.
-- Repeat contact is detected only when the customer says so; there is no contact history.
+- Repeat contact is detected only when the customer says so, there is no contact history.
 - The transcript and the summary are saved when the chat ends. If the program is killed, only the ticket survives,
   and a conversation without a ticket is lost.
 - Anyone who knows an order number can see its product and status: there is no login.
 - Prompt injection is not tested automatically.
 - The log file can contain customer messages.
-- Voice mode needs an OpenAI key even when the chat model is from another provider.
-
-## Next steps
-
-1. **Production basics:** database and API, contact history from past tickets, routing and escalation rules.
-2. **Quality and safety:** an LLM judge in the evals (language, no promises, no invented policy, prompt injection), and
-   more cases (several tickets per chat, today's date for late orders).
-3. **Experience:** smoother voice (hands-free, interruptions, faster speech), memory across conversations for
-   returning customers, a faster model compared with the evals.

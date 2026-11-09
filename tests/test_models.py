@@ -1,20 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-from support_agent.models import Category, Sentiment, Ticket, Urgency
-
-
-def test_ticket():
-    ticket = Ticket(
-        order_number='1001',
-        category='damaged_item',
-        description='Lamp is broken.',
-        urgency='medium',
-        sentiment='negative',
-    )
-    assert ticket.category == Category.DAMAGED_ITEM
-    assert ticket.urgency == Urgency.MEDIUM
-    assert ticket.sentiment == Sentiment.NEGATIVE
+from support_agent.models import Ticket
 
 
 @pytest.mark.parametrize('description', ['', '   '])

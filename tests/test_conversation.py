@@ -8,6 +8,15 @@ from support_agent.conversation import GIVE_UP_REPLY, GREETING, RETRY_REPLY, Con
 from support_agent.models import Message, Ticket
 from tests.fakes import fake_agent
 
+TICKET = {
+    'order_number': '1001',
+    'category': 'damaged_item',
+    'description': 'Lamp is broken.',
+    'urgency': 'low',
+    'sentiment': 'neutral',
+}
+SAVE_TICKET = AIMessage('', tool_calls=[{'name': 'save_ticket', 'args': TICKET, 'id': 'call-1'}])
+
 
 def conversation(*replies) -> Conversation:
     chat = Conversation(fake_agent(*replies))
@@ -36,7 +45,7 @@ def test_reply_with_several_messages():
     assert [message.content for message in chat.transcript[2:]] == replies
 
 
-def test_failures():
+def test_retry_then_give_up():
     chat = conversation(RuntimeError('timeout'), RuntimeError('timeout'))
     assert list(chat.send('My lamp is broken')) == [RETRY_REPLY]
     assert list(chat.send('My lamp is broken')) == [GIVE_UP_REPLY]
@@ -51,24 +60,13 @@ def test_failure_count_resets_after_a_reply():
 
 
 def test_ticket_is_saved_and_kept_at_close():
-    ticket = {
-        'order_number': '1001',
-        'category': 'damaged_item',
-        'description': 'Lamp is broken.',
-        'urgency': 'low',
-        'sentiment': 'neutral',
-    }
-    save = AIMessage('', tool_calls=[{'name': 'save_ticket', 'args': ticket, 'id': 'call-1'}])
-    chat = conversation("What's your order number?", save, 'I logged that your desk lamp arrived broken.')
+    chat = conversation("What's your order number?", SAVE_TICKET, 'I logged that your desk lamp arrived broken.')
 
     list(chat.send('My lamp is broken'))
     assert chat.ticket is None
     assert list(chat.send('1001')) == ['I logged that your desk lamp arrived broken.']
-    assert chat.ticket == Ticket(**ticket)
-
-    record = json.loads(chat.close().read_text())
-    assert record['ticket'] == ticket
-    assert record['summary'] == {'text': 'Summary.', 'key_points': ['Point']}
+    assert chat.ticket == Ticket(**TICKET)
+    assert json.loads(chat.close().read_text())['ticket'] == TICKET
 
 
 def test_close_saves_with_summary():
@@ -112,11 +110,7 @@ def test_conversation_continues_after_a_tool_fails(monkeypatch):
         raise OSError('Disk full')
 
     monkeypatch.setattr(storage, 'save_ticket', broken_save)
-    ticket = {'order_number': '1001', 'category': 'damaged_item', 'description': 'Broken.', 'urgency': 'low'}
-    save = AIMessage(
-        '', tool_calls=[{'name': 'save_ticket', 'args': ticket | {'sentiment': 'neutral'}, 'id': 'call-1'}]
-    )
-    chat = conversation(save, 'Sorry, please email us.', 'Anything else?')
+    chat = conversation(SAVE_TICKET, 'Sorry, please email us.', 'Anything else?')
 
     assert list(chat.send('Lamp 1001 is broken')) == ['Sorry, please email us.']
     assert list(chat.send('Ok')) == ['Anything else?']

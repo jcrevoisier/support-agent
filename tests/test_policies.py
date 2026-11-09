@@ -17,10 +17,7 @@ def fake_embeddings(monkeypatch):
 def test_search_returns_whole_sections():
     sections = policies.search('Can I return worn shoes?')
     assert len(sections) == 2
-    assert all(
-        section.split('\n')[0] in {'Returns', 'Refunds', 'Shipping', 'Damaged or wrong items', 'Exchanges'}
-        for section in sections
-    )
+    assert all(section in policies.POLICIES_FILE.read_text() for section in sections)
 
 
 def test_search_policies_tool():
