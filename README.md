@@ -180,7 +180,7 @@ runs ten times in parallel, because the model does not answer the same way every
 | Third contact (negative, high) | 10/10 |
 | Upset after the ticket (negative, still medium) | 10/10 |
 | Second problem (the ticket keeps the first one) | 10/10 |
-| General question (answered, no ticket) | 10/10 |
+| General question (answered from the policies, no ticket) | 10/10 |
 | No order number (no ticket, gives the support email) | 10/10 |
 | Wants a person (gives the support email) | 10/10 |
 

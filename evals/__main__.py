@@ -119,6 +119,7 @@ SCENARIOS = [
         'General question',
         ['How long does standard delivery take?', 'Ok thanks, that is all.'],
         None,
+        [called('search_policies')],
     ),
     Scenario(
         'No order number',
