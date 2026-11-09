@@ -69,6 +69,23 @@ def test_ticket_is_saved_and_kept_at_close():
     assert json.loads(chat.close().read_text())['ticket'] == TICKET
 
 
+def test_transcript_is_saved_after_each_message(fake_storage):
+    chat = conversation("What's your order number?")
+    list(chat.send('My lamp is broken'))
+    record = json.loads((fake_storage / f'{chat.id}.json').read_text())
+    assert record['transcript'] == [message.model_dump() for message in chat.transcript]
+    assert record['summary'] is None
+
+
+def test_chat_continues_when_saving_the_transcript_fails(monkeypatch):
+    def broken_save(*args):
+        raise OSError('Disk full')
+
+    monkeypatch.setattr(storage, 'save_conversation', broken_save)
+    chat = conversation("What's your order number?")
+    assert list(chat.send('My lamp is broken')) == ["What's your order number?"]
+
+
 def test_close_saves_with_summary():
     chat = conversation('Hello! How can I help?')
     list(chat.send('Hi'))

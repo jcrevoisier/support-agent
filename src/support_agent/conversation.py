@@ -5,6 +5,7 @@ from pathlib import Path
 
 from langchain_core.messages import AIMessage, HumanMessage
 from langgraph.graph.state import CompiledStateGraph
+from pydantic import ValidationError
 
 from support_agent import storage
 from support_agent.agent import SUPPORT_EMAIL, build_agent
@@ -31,21 +32,24 @@ class Conversation:
         return GREETING
 
     def send(self, text: str) -> Iterator[str]:
-        """Send the customer's message to the agent and yield each bot message as soon as the agent writes it."""
+        """Send the customer's message to the agent and yield each bot message as soon as the agent writes it.
+
+        Saves the transcript after the turn, so a crash loses at most the current turn.
+        """
         try:
             for step in self.agent.stream({'messages': [HumanMessage(text)]}, self.config, stream_mode='updates'):
                 for update in step.values():
                     for message in (update or {}).get('messages', []):
                         if isinstance(message, AIMessage) and message.text:
                             yield message.text
+            self.failures = 0
         except Exception:
             logger.exception('Agent failed in conversation %s', self.id)
             self.failures += 1
             reply = RETRY_REPLY if self.failures == 1 else GIVE_UP_REPLY
             self._add_bot_message(reply)
             yield reply
-            return
-        self.failures = 0
+        self._save_transcript()
 
     def close(self) -> Path | None:
         """Summarize and save the conversation. Call it when the customer leaves.
@@ -73,6 +77,12 @@ class Conversation:
     @property
     def ticket(self) -> Ticket | None:
         return storage.load_ticket(self.id)
+
+    def _save_transcript(self) -> None:
+        try:
+            storage.save_conversation(self.id, self.transcript, None)
+        except (OSError, ValidationError):
+            logger.exception('Could not save the transcript of conversation %s', self.id)
 
     def _add_bot_message(self, text: str) -> None:
         self.agent.update_state(self.config, {'messages': [AIMessage(text)]})

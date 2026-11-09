@@ -99,8 +99,8 @@ customer ──text or voice──▶ Conversation ──▶ LangChain agent (LL
 2. The agent decides what to do: ask a question, look up the order, search the policies, or save the ticket. Tools
    return `Error: …` on bad input (unknown order, empty description), so the model sees the problem and asks again.
 3. Each bot message is shown (and spoken in voice mode) as soon as the agent writes it.
-4. When the chat ends, the transcript and an AI summary are added to the conversation file. The ticket is already
-   there: `save_ticket` writes it as soon as it is complete, so it is not lost if the program stops.
+4. The ticket is saved as soon as it is complete, and the transcript after each completed turn. When the chat ends, an
+   AI summary is added to the conversation file.
 
 | File | Role |
 |---|---|
@@ -160,7 +160,7 @@ Errors are logged to `support-agent.log`.
 ## Tests and evals
 
 ```
-uv run pytest                    # 41 tests, offline, under a second
+uv run pytest                    # 43 tests, offline, under a second
 uv run python -m evals --runs 10 # real model, about 5 minutes, a few cents
 ```
 
@@ -202,7 +202,6 @@ already works on the next one.
   enforced in code.
 - No ticket without an order number.
 - The bot doesn't know today's date, so it can't tell whether a delivery is late.
-- The transcript and summary are only saved when the chat ends, so they are lost if the program is killed.
 - The log file can contain customer messages.
 
 ## Potential improvements
