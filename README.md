@@ -191,8 +191,7 @@ That would need an LLM judge.
 
 ## Latency
 
-A normal turn is one model call, about 1.5 s. A turn that saves the ticket makes three calls (look up, save, reply)
-and takes about 4 to 6 s.
+A turn takes about 2 to 6 s, depending on how many model calls it needs. The turn that saves the ticket makes three.
 Voice adds about 1 s for speech-to-text and 1.5 s before the bot starts speaking. While one message plays, the agent
 already works on the next one.
 

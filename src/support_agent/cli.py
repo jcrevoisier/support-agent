@@ -2,6 +2,7 @@ import argparse
 import logging
 
 from dotenv import load_dotenv
+from pydantic import ValidationError
 
 from support_agent import voice
 from support_agent.conversation import Conversation
@@ -37,7 +38,7 @@ def main() -> None:
             path = chat.close()
         except KeyboardInterrupt:
             print('Stopped before the conversation was saved.')
-        except OSError:
+        except (OSError, ValidationError):
             logger.exception('Could not save conversation %s', chat.id)
             print(f'Could not save the conversation. See {LOG_FILE}.')
         else:
