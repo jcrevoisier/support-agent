@@ -3,6 +3,8 @@
 A customer support agent for a fictional online shop. It chats with the customer by text or by voice, collects what
 the support team needs, checks it, and saves a ticket and a summary of the conversation as JSON.
 
+**Demo video:** https://www.loom.com/share/8115df4744f34ee78fca59b1a3e89d54
+
 For each conversation it collects:
 
 | Field | Values |
